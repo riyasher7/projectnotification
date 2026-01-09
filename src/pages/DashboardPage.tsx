@@ -2,11 +2,6 @@ import { useEffect, useState } from 'react';
 import { Users, UserCheck, Mail, Send } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
-import type { Page } from '../App';
-
-type DashboardPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-};
 
 type Stats = {
   totalUsers: number;
@@ -16,7 +11,7 @@ type Stats = {
   draftCampaigns: number;
 };
 
-export function DashboardPage({ onNavigate }: DashboardPageProps) {
+export function DashboardPage() {
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -38,10 +33,14 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       ]);
 
       const totalUsers = usersRes.count || 0;
-      const activeUsers = usersRes.data?.filter(u => u.is_active).length || 0;
+      const activeUsers =
+        usersRes.data?.filter(u => u.is_active).length || 0;
+
       const totalCampaigns = campaignsRes.count || 0;
-      const sentCampaigns = campaignsRes.data?.filter(c => c.status === 'sent').length || 0;
-      const draftCampaigns = campaignsRes.data?.filter(c => c.status === 'draft').length || 0;
+      const sentCampaigns =
+        campaignsRes.data?.filter(c => c.status === 'sent').length || 0;
+      const draftCampaigns =
+        campaignsRes.data?.filter(c => c.status === 'draft').length || 0;
 
       setStats({
         totalUsers,
@@ -66,20 +65,22 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   ];
 
   return (
-    <Layout currentPage="dashboard" onNavigate={onNavigate}>
+    <Layout>
       <div className="px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Overview of your campaign management system</p>
+          <p className="text-gray-600 mt-2">
+            Overview of your campaign management system
+          </p>
         </div>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {statCards.map((card) => {
+            {statCards.map(card => {
               const Icon = card.icon;
               return (
                 <div
@@ -88,10 +89,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-sm font-medium">{card.label}</p>
-                      <p className="text-4xl font-bold text-gray-800 mt-2">{card.value}</p>
+                      <p className="text-gray-600 text-sm font-medium">
+                        {card.label}
+                      </p>
+                      <p className="text-4xl font-bold text-gray-800 mt-2">
+                        {card.value}
+                      </p>
                     </div>
-                    <div className={`${card.color} w-14 h-14 rounded-full flex items-center justify-center`}>
+                    <div
+                      className={`${card.color} w-14 h-14 rounded-full flex items-center justify-center`}
+                    >
                       <Icon className="text-white" size={28} />
                     </div>
                   </div>

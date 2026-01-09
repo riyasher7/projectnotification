@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Users } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase, Campaign, User } from '../lib/supabase';
-import type { Page } from '../App';
 
-type CampaignPreviewPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-  campaignId: string;
-};
+export function CampaignPreviewPage() {
+  const { id: campaignId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewPageProps) {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [eligibleUsers, setEligibleUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!campaignId) return;
     fetchCampaignAndUsers();
   }, [campaignId]);
 
@@ -39,16 +38,16 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
       }
 
       const { data: usersData, error: usersError } = await usersQuery;
-
       if (usersError) throw usersError;
 
-      const filtered = usersData?.filter((user: any) => {
-        const prefs = user.user_preferences?.[0];
-        if (!prefs) return false;
+      const filtered =
+        usersData?.filter((user: any) => {
+          const prefs = user.user_preferences?.[0];
+          if (!prefs) return false;
 
-        const prefKey = campaignData.notification_type;
-        return prefs[prefKey] === true;
-      }) || [];
+          const prefKey = campaignData.notification_type;
+          return prefs[prefKey] === true;
+        }) || [];
 
       setEligibleUsers(filtered);
     } catch (error) {
@@ -68,10 +67,10 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
   };
 
   return (
-    <Layout currentPage="campaigns" onNavigate={onNavigate}>
+    <Layout>
       <div className="px-4">
         <button
-          onClick={() => onNavigate('campaigns')}
+          onClick={() => navigate('/campaigns')}
           className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -80,29 +79,39 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
           </div>
         ) : (
           <div className="max-w-4xl">
+            {/* Campaign details */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Campaign Details</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Campaign Details
+              </h2>
+
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm text-gray-600">Campaign Name</p>
-                  <p className="text-lg font-semibold text-gray-800">{campaign?.name}</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {campaign?.name}
+                  </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-600">Notification Type</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {campaign && getNotificationTypeLabel(campaign.notification_type)}
+                    {campaign &&
+                      getNotificationTypeLabel(campaign.notification_type)}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-600">City Filter</p>
                   <p className="text-lg font-semibold text-gray-800">
                     {campaign?.city_filter || 'All Cities'}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
                   <span
@@ -117,6 +126,7 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
                   </span>
                 </div>
               </div>
+
               <div className="mt-6">
                 <p className="text-sm text-gray-600">Message Content</p>
                 <p className="text-lg text-gray-800 mt-2 bg-gray-50 p-4 rounded-lg">
@@ -125,12 +135,17 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
               </div>
             </div>
 
+            {/* Eligible users */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Eligible Recipients</h2>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Eligible Recipients
+                </h2>
                 <div className="flex items-center space-x-2 bg-pink-100 text-pink-800 px-4 py-2 rounded-lg">
                   <Users size={20} />
-                  <span className="font-bold">{eligibleUsers.length} Users</span>
+                  <span className="font-bold">
+                    {eligibleUsers.length} Users
+                  </span>
                 </div>
               </div>
 
@@ -150,16 +165,16 @@ export function CampaignPreviewPage({ onNavigate, campaignId }: CampaignPreviewP
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {eligibleUsers.map((user) => (
+                    {eligibleUsers.map(user => (
                       <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {user.full_name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{user.email}</div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {user.email}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{user.city}</div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {user.city}
                         </td>
                       </tr>
                     ))}

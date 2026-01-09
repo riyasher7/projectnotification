@@ -1,110 +1,121 @@
-import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
-import { UserPreferencesViewPage } from './pages/UserPreferencesViewPage';
 import { CampaignManagementPage } from './pages/CampaignManagementPage';
 import { CampaignPreviewPage } from './pages/CampaignPreviewPage';
 import { CampaignSendPage } from './pages/CampaignSendPage';
 import { NotificationLogsPage } from './pages/NotificationLogsPage';
 import { UserPreferenceLoginPage } from './pages/UsersLogin';
 import { UserPreferenceSettingsPage } from './pages/UserPreferencePortalPage';
+import { EmployeeRoute } from './components/EmployeeRoute';
+import { UserRoute } from './components/userRoute';
+import { RoleRoute } from './components/RoleRoute';
 
-export type Page =
-  | 'home'
-  | 'login'
-  | 'signup'
-  | 'dashboard'
-  | 'users'
-  | 'user-preferences-view'
-  | 'campaigns'
-  | 'campaign-preview'
-  | 'campaign-send'
-  | 'logs'
-  | 'user-preference-login'
-  | 'user-preferences';
-
-function AppContent() {
+function EmployeeRedirect() {
   const { employee } = useAuth();
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [pageData, setPageData] = useState<any>(null);
 
-  useEffect(() => {
-    const storedEmployee = localStorage.getItem('employee');
-    if (storedEmployee && !employee) {
-      setCurrentPage('dashboard');
-    }
-  }, [employee]);
+  if (!employee) return <Navigate to="/employee/login" />;
 
-  const navigate = (page: Page, data?: any) => {
-    setCurrentPage(page);
-    setPageData(data || null);
-  };
-
-  if (currentPage === 'home') {
-    return <LandingPage onNavigate={navigate} />;
-  }
-
-  if (currentPage === 'login') {
-    return <LoginPage onNavigate={navigate} />;
-  }
-
-  if (currentPage === 'signup') {
-    return <SignupPage onNavigate={navigate} />;
-  }
-
-  if (currentPage === 'user-preference-login') {
-    return <UserPreferenceLoginPage onNavigate={navigate} />;
-  }
-
-  if (currentPage === 'user-preferences') {
-    if (!pageData?.userId || !pageData?.preferences) {
-      return <UserPreferenceLoginPage onNavigate={navigate} />;
-    }
-
-    return (
-      <UserPreferenceSettingsPage
-        onNavigate={navigate}
-        userId={pageData.userId}
-        initialPreferences={pageData.preferences}
-      />
-    );
-  }
-
-  if (!employee) {
-    return <LoginPage onNavigate={navigate} />;
-  }
-
-  switch (currentPage) {
-    case 'dashboard':
-      return <DashboardPage onNavigate={navigate} />;
-    case 'users':
-      return <UserManagementPage onNavigate={navigate} />;
-    case 'user-preferences-view':
-      return <UserPreferencesViewPage onNavigate={navigate} userId={pageData?.userId} />;
-    case 'campaigns':
-      return <CampaignManagementPage onNavigate={navigate} />;
-    case 'campaign-preview':
-      return <CampaignPreviewPage onNavigate={navigate} campaignId={pageData?.campaignId} />;
-    case 'campaign-send':
-      return <CampaignSendPage onNavigate={navigate} campaignId={pageData?.campaignId} />;
-    case 'logs':
-      return <NotificationLogsPage onNavigate={navigate} />;
-    default:
-      return <DashboardPage onNavigate={navigate} />;
-  }
+  if (employee.role === 'admin') return <Navigate to="/dashboard" />;
+  return <Navigate to="/campaigns" />;
 }
 
-function App() {
+function AppRoutes() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+
+      {/* User */}
+      <Route path="/user/login" element={<UserPreferenceLoginPage />} />
+      <Route
+        path="/user/preferences"
+        element={
+          <UserRoute>
+            <UserPreferenceSettingsPage />
+          </UserRoute>
+        }
+      />
+
+      {/* Employee */}
+      <Route path="/employee/login" element={<LoginPage />} />
+      <Route path="/employee" element={<EmployeeRedirect />} />
+
+      {/* Admin */}
+      <Route
+        path="/dashboard"
+        element={
+          <RoleRoute allow={['admin']}>
+            <DashboardPage />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <RoleRoute allow={['admin', 'creator']}>
+            <UserManagementPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Campaigns */}
+      <Route
+        path="/campaigns"
+        element={
+          <RoleRoute allow={['admin', 'creator', 'viewer']}>
+            <CampaignManagementPage />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/campaigns/:id/preview"
+        element={
+          <RoleRoute allow={['admin', 'creator', 'viewer']}>
+            <CampaignPreviewPage />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/campaigns/:id/send"
+        element={
+          <RoleRoute allow={['admin', 'creator']}>
+            <CampaignSendPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Logs */}
+      <Route
+        path="/logs"
+        element={
+          <RoleRoute allow={['admin']}>
+            <NotificationLogsPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
-export default App;
-
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

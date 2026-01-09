@@ -1,20 +1,18 @@
 import { useState } from 'react';
-import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
+import { ArrowLeft, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import type { Page } from '../App';
 
-type LoginPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-};
+export function LoginPage() {
+  const navigate = useNavigate();
 
-
-export function LoginPage({ onNavigate }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+
+  const { loginEmployee } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +34,14 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
         return;
       }
 
-      login(data);
-      onNavigate('dashboard');
+      loginEmployee(data);
+
+      // 🔀 Redirect based on role
+      if (data.role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/campaigns');
+      }
     } catch {
       setError('Login failed. Please try again.');
     } finally {
@@ -49,7 +53,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <button
-          onClick={() => onNavigate('home')}
+          onClick={() => navigate('/')}
           className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -111,4 +115,5 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
     </div>
   );
 }
+
 

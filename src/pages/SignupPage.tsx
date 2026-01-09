@@ -1,21 +1,18 @@
 import { useState } from 'react';
 import { ArrowLeft, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import type { Page } from '../App';
 
-type SignupPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-};
+export function SignupPage() {
+  const navigate = useNavigate();
 
-
-export function SignupPage({ onNavigate }: SignupPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [PhoneNumber, setPhoneNumber] = useState('');
-  const [city, setcity] = useState('');
-  const [gender, setGender] = useState<'male' | 'female' | 'prefer_not_to_say'>(
-  'prefer_not_to_say'
-);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [city, setCity] = useState('');
+  const [gender, setGender] = useState<
+    'male' | 'female' | 'prefer_not_to_say'
+  >('prefer_not_to_say');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,16 +27,20 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
         {
           name,
           email,
-          password_hash: password, // ⚠️ Hash in production
+          password_hash: password, // ⚠️ hash in production
           role: 'viewer',
           is_active: true,
+          phone_number: phoneNumber,
+          city,
+          gender,
         },
       ]);
 
       if (error) throw error;
 
-      onNavigate('login');
-    } catch (err) {
+      // Redirect to employee login
+      navigate('/employee/login');
+    } catch {
       setError('Signup failed. Email may already exist.');
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <button
-          onClick={() => onNavigate('login')}
+          onClick={() => navigate('/employee/login')}
           className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700"
         >
           <ArrowLeft size={20} />
@@ -61,7 +62,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-pink-600 mb-2">Nykaa</h1>
             <h2 className="text-2xl font-semibold text-gray-800">
-              User Signup
+              Employee Signup
             </h2>
           </div>
 
@@ -72,7 +73,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               </label>
               <input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 required
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />
@@ -85,7 +86,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />
@@ -97,11 +98,11 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               </label>
               <input
                 type="tel"
-                value={PhoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
                 pattern="[0-9]{10}"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />
             </div>
 
@@ -110,9 +111,8 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
                 City
               </label>
               <input
-                type="text"
                 value={city}
-                onChange={(e) => setcity(e.target.value)}
+                onChange={e => setCity(e.target.value)}
                 required
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />
@@ -124,41 +124,19 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               </label>
 
               <div className="flex gap-6">
-                <label className="flex items-center gap-2 text-gray-700">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="male"
-                    checked={gender === 'male'}
-                    onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'prefer_not_to_say')}
-                    className="text-pink-600 focus:ring-pink-500"
-                  />
-                  Male
-                </label>
-
-                <label className="flex items-center gap-2 text-gray-700">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="female"
-                    checked={gender === 'female'}
-                    onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'prefer_not_to_say')}
-                    className="text-pink-600 focus:ring-pink-500"
-                  />
-                  Female
-                </label>
-
-                <label className="flex items-center gap-2 text-gray-700">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="prefer_not_to_say"
-                    checked={gender === 'prefer_not_to_say'}
-                    onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'prefer_not_to_say')}
-                    className="text-pink-600 focus:ring-pink-500"
-                  />
-                  Prefer not to say
-                </label>
+                {(['male', 'female', 'prefer_not_to_say'] as const).map(g => (
+                  <label key={g} className="flex items-center gap-2 text-gray-700">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={g}
+                      checked={gender === g}
+                      onChange={() => setGender(g)}
+                      className="text-pink-600 focus:ring-pink-500"
+                    />
+                    {g.replace(/_/g, ' ')}
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -169,7 +147,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />

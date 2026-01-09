@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { supabase, User, UserPreference } from '../lib/supabase';
-import type { Page } from '../App';
+import { supabase, User } from '../lib/supabase';
 
-type UserManagementPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-};
+export function UserManagementPage() {
+  const navigate = useNavigate();
 
-export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({ email: '', full_name: '', city: '', is_active: true });
+  const [formData, setFormData] = useState({
+    email: '',
+    full_name: '',
+    city: '',
+    is_active: true,
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -56,7 +59,9 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
         if (error) throw error;
 
         if (newUser) {
-          await supabase.from('user_preferences').insert([{ user_id: newUser.id }]);
+          await supabase
+            .from('user_preferences')
+            .insert([{ user_id: newUser.id }]);
         }
       }
 
@@ -108,32 +113,37 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
     setShowModal(true);
   };
 
-  const viewPreferences = async (userId: string) => {
-    onNavigate('user-preferences-view', { userId });
+  const viewPreferences = (userId: string) => {
+    navigate(`/users/${userId}/preferences`);
   };
 
   return (
-    <Layout currentPage="users" onNavigate={onNavigate}>
+    <Layout>
       <div className="px-4">
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-            <p className="text-gray-600 mt-2">Manage your user base and their details</p>
+            <h1 className="text-3xl font-bold text-gray-800">
+              User Management
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Manage your user base and their details
+            </p>
           </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all"
-            >
-              <Plus size={20} />
-              <span>Add User</span>
-            </button>
-          </div>
+
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all"
+          >
+            <Plus size={20} />
+            <span>Add User</span>
+          </button>
         </div>
 
+        {/* Table */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -157,19 +167,20 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
                   </th>
                 </tr>
               </thead>
+
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
+                {users.map(user => (
                   <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {user.full_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {user.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.city}</div>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {user.city}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <button
                         onClick={() => toggleActive(user)}
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -181,7 +192,7 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
                         {user.is_active ? 'Active' : 'Inactive'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <td className="px-6 py-4 space-x-2">
                       <button
                         onClick={() => viewPreferences(user.id)}
                         className="text-blue-600 hover:text-blue-900"
@@ -211,67 +222,81 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
           </div>
         )}
 
+        {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h2>
+
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={e =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder="Email"
+                  required
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+
+                <input
+                  value={formData.full_name}
+                  onChange={e =>
+                    setFormData({ ...formData, full_name: e.target.value })
+                  }
+                  placeholder="Full Name"
+                  required
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+
+                <input
+                  value={formData.city}
+                  onChange={e =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
+                  placeholder="City"
+                  required
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+
+                <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        is_active: e.target.checked,
+                      })
+                    }
                   />
-                  <label className="text-sm font-medium text-gray-700">Active</label>
-                </div>
-                <div className="flex space-x-3 pt-4">
+                  Active
+                </label>
+
+                <div className="flex gap-3 pt-4">
                   <button
                     type="button"
                     onClick={() => {
                       setShowModal(false);
                       setEditingUser(null);
-                      setFormData({ email: '', full_name: '', city: '', is_active: true });
+                      setFormData({
+                        email: '',
+                        full_name: '',
+                        city: '',
+                        is_active: true,
+                      });
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="flex-1 border rounded-lg py-2"
                   >
                     Cancel
                   </button>
+
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-all"
+                    className="flex-1 bg-pink-600 text-white rounded-lg py-2"
                   >
                     {editingUser ? 'Update' : 'Create'}
                   </button>
@@ -284,3 +309,4 @@ export function UserManagementPage({ onNavigate }: UserManagementPageProps) {
     </Layout>
   );
 }
+

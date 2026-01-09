@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { ArrowLeft, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase, UserPreference } from '../lib/supabase';
-import type { Page } from '../App';
 
-type Props = {
-  onNavigate: (page: Page, data?: any) => void;
-};
+export function UserPreferenceLoginPage() {
+  const navigate = useNavigate();
 
-export function UserPreferenceLoginPage({ onNavigate }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,10 +35,9 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const resolvedPrefs: UserPreference =
-        prefs ??
-        {
-          id: '',
+      // Ensure preferences exist
+      if (!prefs) {
+        const defaultPrefs: Omit<UserPreference, 'id'> = {
           user_id: user.id,
           promotional_offers: true,
           order_updates: true,
@@ -51,10 +48,11 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
           updated_at: new Date().toISOString(),
         };
 
-      onNavigate('user-preferences', {
-        userId: user.id,
-        preferences: resolvedPrefs,
-      });
+        await supabase.from('user_preferences').insert([defaultPrefs]);
+      }
+
+      // Route to preferences page
+      navigate(`/user/${user.id}/preferences`);
     } catch {
       setMessage('Something went wrong. Please try again.');
     } finally {
@@ -66,7 +64,7 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white p-4">
       <div className="max-w-md mx-auto py-10">
         <button
-          onClick={() => onNavigate('home')}
+          onClick={() => navigate('/')}
           className="mb-6 flex items-center text-pink-600"
         >
           <ArrowLeft size={18} />
@@ -83,7 +81,7 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
               type="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
               className="w-full px-4 py-3 border rounded-lg"
             />
@@ -92,7 +90,7 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
               type="password"
               placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               className="w-full px-4 py-3 border rounded-lg"
             />
@@ -104,14 +102,14 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-pink-600 text-white py-3 rounded-lg"
+              className="w-full bg-pink-600 text-white py-3 rounded-lg disabled:opacity-50"
             >
               {loading ? 'Checking...' : 'Continue'}
             </button>
 
             <button
               type="button"
-              onClick={() => onNavigate('signup')}
+              onClick={() => navigate('/signup')}
               className="w-full border border-pink-500 text-pink-600 py-3 rounded-lg flex items-center justify-center gap-2"
             >
               <UserPlus size={18} />
@@ -123,3 +121,4 @@ export function UserPreferenceLoginPage({ onNavigate }: Props) {
     </div>
   );
 }
+

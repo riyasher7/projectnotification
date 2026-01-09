@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase, Campaign } from '../lib/supabase';
-import type { Page } from '../App';
 
-type CampaignSendPageProps = {
-  onNavigate: (page: Page, data?: any) => void;
-  campaignId: string;
-};
+export function CampaignSendPage() {
+  const { id: campaignId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPageProps) {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    if (!campaignId) return;
     fetchCampaignAndCount();
   }, [campaignId]);
 
@@ -40,16 +39,16 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
       }
 
       const { data: usersData, error: usersError } = await usersQuery;
-
       if (usersError) throw usersError;
 
-      const filtered = usersData?.filter((user: any) => {
-        const prefs = user.user_preferences?.[0];
-        if (!prefs) return false;
+      const filtered =
+        usersData?.filter((user: any) => {
+          const prefs = user.user_preferences?.[0];
+          if (!prefs) return false;
 
-        const prefKey = campaignData.notification_type;
-        return prefs[prefKey] === true;
-      }) || [];
+          const prefKey = campaignData.notification_type;
+          return prefs[prefKey] === true;
+        }) || [];
 
       setUserCount(filtered.length);
     } catch (error) {
@@ -60,7 +59,7 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
   };
 
   const handleSendCampaign = async () => {
-    if (!campaign) return;
+    if (!campaign || !campaignId) return;
 
     setSending(true);
     try {
@@ -74,16 +73,16 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
       }
 
       const { data: usersData, error: usersError } = await usersQuery;
-
       if (usersError) throw usersError;
 
-      const eligibleUsers = usersData?.filter((user: any) => {
-        const prefs = user.user_preferences?.[0];
-        if (!prefs) return false;
+      const eligibleUsers =
+        usersData?.filter((user: any) => {
+          const prefs = user.user_preferences?.[0];
+          if (!prefs) return false;
 
-        const prefKey = campaign.notification_type;
-        return prefs[prefKey] === true;
-      }) || [];
+          const prefKey = campaign.notification_type;
+          return prefs[prefKey] === true;
+        }) || [];
 
       const notificationLogs = eligibleUsers.map((user: any) => ({
         campaign_id: campaignId,
@@ -107,7 +106,7 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
       if (updateError) throw updateError;
 
       alert(`Campaign sent successfully to ${eligibleUsers.length} users!`);
-      onNavigate('campaigns');
+      navigate('/campaigns');
     } catch (error) {
       console.error('Error sending campaign:', error);
       alert('Failed to send campaign');
@@ -117,10 +116,10 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
   };
 
   return (
-    <Layout currentPage="campaigns" onNavigate={onNavigate}>
+    <Layout>
       <div className="px-4">
         <button
-          onClick={() => onNavigate('campaigns')}
+          onClick={() => navigate('/campaigns')}
           className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -129,7 +128,7 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
           </div>
         ) : (
           <div className="max-w-2xl mx-auto">
@@ -138,7 +137,9 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
                 <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="text-yellow-600" size={40} />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Confirm Campaign Send</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                  Confirm Campaign Send
+                </h2>
                 <p className="text-gray-600">
                   Are you sure you want to send this campaign? This action cannot be undone.
                 </p>
@@ -147,11 +148,15 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
               <div className="bg-gray-50 rounded-lg p-6 mb-6 space-y-4">
                 <div>
                   <p className="text-sm text-gray-600">Campaign Name</p>
-                  <p className="text-lg font-semibold text-gray-800">{campaign?.name}</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {campaign?.name}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Eligible Recipients</p>
-                  <p className="text-3xl font-bold text-pink-600">{userCount} Users</p>
+                  <p className="text-3xl font-bold text-pink-600">
+                    {userCount} Users
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Message Content</p>
@@ -161,12 +166,13 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
 
               <div className="flex space-x-4">
                 <button
-                  onClick={() => onNavigate('campaigns')}
+                  onClick={() => navigate('/campaigns')}
                   disabled={sending}
                   className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50"
                 >
                   Cancel
                 </button>
+
                 <button
                   onClick={handleSendCampaign}
                   disabled={sending || userCount === 0}
@@ -183,3 +189,4 @@ export function CampaignSendPage({ onNavigate, campaignId }: CampaignSendPagePro
     </Layout>
   );
 }
+
