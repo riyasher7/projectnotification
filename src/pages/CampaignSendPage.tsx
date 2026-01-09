@@ -149,7 +149,7 @@ export function CampaignSendPage() {
                 <div>
                   <p className="text-sm text-gray-600">Campaign Name</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {campaign?.name}
+                    {campaign?.campaign_name}
                   </p>
                 </div>
                 <div>

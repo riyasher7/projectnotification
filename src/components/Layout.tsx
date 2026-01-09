@@ -7,11 +7,32 @@ type LayoutProps = {
   children: ReactNode;
 };
 
+/**
+ * Role ID mapping:
+ * 1 = Admin
+ * 2 = Creator
+ * 3 = Viewer
+ */
+type RoleId = 1 | 2 | 3;
+
 type NavItem = {
   name: string;
   icon: React.ComponentType<any>;
   path: string;
-  roles: Array<'admin' | 'creator' | 'viewer'>;
+  roles: RoleId[];
+};
+
+const getRoleName = (roleId: RoleId) => {
+  switch (roleId) {
+    case 1:
+      return 'Admin';
+    case 2:
+      return 'Creator';
+    case 3:
+      return 'Viewer';
+    default:
+      return 'Unknown';
+  }
 };
 
 export function Layout({ children }: LayoutProps) {
@@ -28,30 +49,30 @@ export function Layout({ children }: LayoutProps) {
       name: 'Dashboard',
       icon: Home,
       path: '/dashboard',
-      roles: ['admin'],
+      roles: [1],
     },
     {
       name: 'Users',
       icon: Users,
       path: '/users',
-      roles: ['admin', 'creator'],
+      roles: [1, 2],
     },
     {
       name: 'Campaigns',
       icon: Mail,
       path: '/campaigns',
-      roles: ['admin', 'creator', 'viewer'],
+      roles: [1, 2, 3],
     },
     {
       name: 'Notifications',
       icon: Bell,
       path: '/logs',
-      roles: ['admin', 'viewer'],
+      roles: [1, 3],
     },
   ];
 
   const filteredNav = navigation.filter(item =>
-    item.roles.includes(employee.role)
+    item.roles.includes(employee.role_id as RoleId)
   );
 
   return (
@@ -95,9 +116,9 @@ export function Layout({ children }: LayoutProps) {
             {/* User + Logout */}
             <div className="flex items-center space-x-4">
               <div className="text-white text-sm text-right">
-                <div className="font-medium">{employee.full_name}</div>
+                <div className="font-medium">{employee.email}</div>
                 <div className="text-pink-100 text-xs capitalize">
-                  {employee.role}
+                  {getRoleName(employee.role_id as RoleId)}
                 </div>
               </div>
 

@@ -4,9 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase, UserPreference } from '../lib/supabase';
 
 type PreferenceToggleKey =
-  | 'promotional_offers'
+  | 'offers'
   | 'order_updates'
-  | 'newsletters'
+  | 'newsletter'
   | 'email_channel'
   | 'sms_channel'
   | 'push_channel';
@@ -119,9 +119,9 @@ export function UserPreferenceSettingsPage() {
 
           <div>
             <h3 className="font-semibold mb-2">Notification Types</h3>
-            <ToggleRow label="Promotional Offers" field="promotional_offers" />
+            <ToggleRow label="Offers" field="offers" />
             <ToggleRow label="Order Updates" field="order_updates" />
-            <ToggleRow label="Newsletters" field="newsletters" />
+            <ToggleRow label="Newsletter" field="newsletter" />
           </div>
 
           <div>

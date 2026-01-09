@@ -86,7 +86,7 @@ export function UserPreferencesViewPage() {
                 <div>
                   <p className="text-sm text-gray-600">Name</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {user?.full_name}
+                    {user?.name}
                   </p>
                 </div>
 
@@ -128,7 +128,7 @@ export function UserPreferencesViewPage() {
               <div className="space-y-2">
                 <PreferenceItem
                   label="Promotional Offers"
-                  value={preferences?.promotional_offers || false}
+                  value={preferences?.offers || false}
                 />
                 <PreferenceItem
                   label="Order Updates"
@@ -136,7 +136,7 @@ export function UserPreferencesViewPage() {
                 />
                 <PreferenceItem
                   label="Newsletters"
-                  value={preferences?.newsletters || false}
+                  value={preferences?.newsletter || false}
                 />
               </div>
 
