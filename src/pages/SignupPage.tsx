@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 export function SignupPage() {
   const navigate = useNavigate();
 
+  const [userID, setUserID] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -62,11 +63,24 @@ export function SignupPage() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-pink-600 mb-2">Nykaa</h1>
             <h2 className="text-2xl font-semibold text-gray-800">
-              Employee Signup
+              User Signup
             </h2>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                UserID
+              </label>
+              <input
+                type="varchar"
+                value={userID}
+                onChange={e => setUserID(e.target.value)}
+                required
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name

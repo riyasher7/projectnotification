@@ -1,61 +1,87 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl,
+  supabaseAnonKey
+);
+
+/* =======================
+   EMPLOYEES
+======================= */
 
 export type Employee = {
-  id: string;
+  employee_id: number;
   email: string;
-  full_name: string;
-  password_hash: string;
-  role: 'admin' | 'creator' | 'viewer';
+  password: string; // hashed
+  role_id: number;
   is_active: boolean;
   created_at: string;
-  updated_at: string;
 };
+
+/* =======================
+   ROLES
+======================= */
+
+export type Role = {
+  role_id: number;
+  role_name: 'Admin' | 'Creator' | 'Viewer';
+};
+
+/* =======================
+   USERS
+======================= */
 
 export type User = {
-  id: string;
+  user_id: string;
   email: string;
-  full_name: string;
-  city: string;
+  name: string;
+  phone: string | null;
+  city: string | null;
   is_active: boolean;
   created_at: string;
-  updated_at: string;
 };
+
+/* =======================
+   USER PREFERENCES
+======================= */
 
 export type UserPreference = {
-  id: string;
   user_id: string;
-  promotional_offers: boolean;
+  offers: boolean;
   order_updates: boolean;
-  newsletters: boolean;
-  email_channel: boolean;
-  sms_channel: boolean;
-  push_channel: boolean;
+  newsletter: boolean;
+  email_channel:boolean;
+  sms_channel:boolean;
+  push_channel:boolean;
   updated_at: string;
 };
+
+/* =======================
+   CAMPAIGNS
+======================= */
 
 export type Campaign = {
-  id: string;
-  name: string;
-  notification_type: 'promotional_offers' | 'order_updates' | 'newsletters';
+  campaign_id: string;
+  campaign_name: string;
+  notification_type: 'offers' | 'order_updates' | 'newsletter';
   city_filter: string | null;
-  content: string;
   status: 'draft' | 'sent';
-  created_by: string;
-  sent_at: string | null;
+  created_by: number; // employee_id
   created_at: string;
-  updated_at: string;
 };
 
-export type NotificationLog = {
-  id: string;
+/* =======================
+   CAMPAIGN LOGS
+======================= */
+
+export type CampaignLog = {
+  log_id: string;
   campaign_id: string;
   user_id: string;
   status: 'success' | 'failed';
   sent_at: string;
-  error_message: string | null;
 };
+

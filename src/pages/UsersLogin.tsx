@@ -39,9 +39,9 @@ export function UserPreferenceLoginPage() {
       if (!prefs) {
         const defaultPrefs: Omit<UserPreference, 'id'> = {
           user_id: user.id,
-          promotional_offers: true,
+          offers: true,
           order_updates: true,
-          newsletters: true,
+          newsletter: true,
           email_channel: true,
           sms_channel: false,
           push_channel: false,
@@ -73,7 +73,7 @@ export function UserPreferenceLoginPage() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-2xl font-bold text-center mb-6">
-            Manage Preferences
+            User Login
           </h2>
 
           <form onSubmit={handleLookup} className="space-y-4">

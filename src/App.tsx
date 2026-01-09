@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-
+import { supabase } from './lib/supabase';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
@@ -13,7 +13,7 @@ import { NotificationLogsPage } from './pages/NotificationLogsPage';
 import { UserPreferenceLoginPage } from './pages/UsersLogin';
 import { UserPreferenceSettingsPage } from './pages/UserPreferencePortalPage';
 import { EmployeeRoute } from './components/EmployeeRoute';
-import { UserRoute } from './components/userRoute';
+import { UserRoute } from './components/UserRoute';
 import { RoleRoute } from './components/RoleRoute';
 
 function EmployeeRedirect() {
@@ -21,7 +21,7 @@ function EmployeeRedirect() {
 
   if (!employee) return <Navigate to="/employee/login" />;
 
-  if (employee.role === 'admin') return <Navigate to="/dashboard" />;
+  if (employee.role_id == 1) return <Navigate to="/dashboard" />;
   return <Navigate to="/campaigns" />;
 }
 
