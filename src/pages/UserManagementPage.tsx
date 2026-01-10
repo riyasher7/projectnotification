@@ -12,9 +12,11 @@ export function UserManagementPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    full_name: '',
+    phone: '',
     city: '',
+    gender: '',
     is_active: true,
   });
 
@@ -41,45 +43,29 @@ export function UserManagementPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      if (editingUser) {
-        const { error } = await supabase
-          .from('users')
-          .update(formData)
-          .eq('id', editingUser.user_id);
+    const url = editingUser
+      ? `http://localhost:9100/admin/users/${editingUser.user_id}`
+      : 'http://localhost:9100/admin/users';
 
-        if (error) throw error;
-      } else {
-        const { data: newUser, error } = await supabase
-          .from('users')
-          .insert([formData])
-          .select()
-          .single();
+    const method = editingUser ? 'PUT' : 'POST';
 
-        if (error) throw error;
+    await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
 
-        if (newUser) {
-          await supabase
-            .from('user_preferences')
-            .insert([{ user_id: newUser.id }]);
-        }
-      }
-
-      setShowModal(false);
-      setEditingUser(null);
-      setFormData({ email: '', full_name: '', city: '', is_active: true });
-      fetchUsers();
-    } catch (error) {
-      console.error('Error saving user:', error);
-      alert('Failed to save user');
-    }
+    setShowModal(false);
+    setEditingUser(null);
+    fetchUsers();
   };
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const { error } = await supabase.from('users').delete().eq('id', id);
+      const { error } = await supabase.from('users').delete().eq('user_id', id);
       if (error) throw error;
       fetchUsers();
     } catch (error) {
@@ -93,7 +79,7 @@ export function UserManagementPage() {
       const { error } = await supabase
         .from('users')
         .update({ is_active: !user.is_active })
-        .eq('id', user.user_id);
+        .eq('user_id', user.user_id);
 
       if (error) throw error;
       fetchUsers();
@@ -105,9 +91,11 @@ export function UserManagementPage() {
   const openEditModal = (user: User) => {
     setEditingUser(user);
     setFormData({
+      name: user.name,
       email: user.email,
-      full_name: user.name,
+      phone: user.phone ?? '',
       city: user.city ?? '',
+      gender: user.gender ?? '',
       is_active: user.is_active,
     });
     setShowModal(true);
@@ -243,9 +231,9 @@ export function UserManagementPage() {
                 />
 
                 <input
-                  value={formData.full_name}
+                  value={formData.name}
                   onChange={e =>
-                    setFormData({ ...formData, full_name: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="Full Name"
                   required
@@ -261,6 +249,29 @@ export function UserManagementPage() {
                   required
                   className="w-full px-4 py-2 border rounded-lg"
                 />
+
+                <input
+                  value={formData.phone}
+                  onChange={e =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  placeholder="Phone Number"
+                  required
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+
+                <select
+                  value={formData.gender}
+                  onChange={e =>
+                    setFormData({ ...formData, gender: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border rounded-lg bg-white"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
 
                 <label className="flex items-center gap-2">
                   <input
@@ -283,9 +294,11 @@ export function UserManagementPage() {
                       setShowModal(false);
                       setEditingUser(null);
                       setFormData({
+                        name: '',
                         email: '',
-                        full_name: '',
+                        phone: '',
                         city: '',
+                        gender: '',
                         is_active: true,
                       });
                     }}

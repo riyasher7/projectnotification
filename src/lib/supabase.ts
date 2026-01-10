@@ -39,9 +39,11 @@ export type User = {
   email: string;
   name: string;
   phone: string | null;
+  gender: string | null;
   city: string | null;
   is_active: boolean;
   created_at: string;
+  password: string;
 };
 
 /* =======================
