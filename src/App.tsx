@@ -35,13 +35,10 @@ function AppRoutes() {
       {/* User */}
       <Route path="/user/login" element={<UserPreferenceLoginPage />} />
       <Route
-        path="/user/preferences"
-        element={
-          <UserRoute>
-            <UserPreferenceSettingsPage />
-          </UserRoute>
-        }
+        path="/user/:userId/preferences"
+        element={<UserPreferenceSettingsPage />}
       />
+
 
       {/* Employee */}
       <Route path="/employee/login" element={<LoginPage />} />
