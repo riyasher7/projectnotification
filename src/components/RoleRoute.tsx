@@ -1,12 +1,20 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+/**
+ * Role ID mapping:
+ * 1 = Admin
+ * 2 = Creator
+ * 3 = Viewer
+ */
+type RoleId = 1 | 2 | 3;
+
 export function RoleRoute({
   children,
   allow,
 }: {
   children: JSX.Element;
-  allow: Array<'admin' | 'creator' | 'viewer'>;
+  allow: RoleId[];
 }) {
   const { employee } = useAuth();
 
@@ -14,7 +22,7 @@ export function RoleRoute({
     return <Navigate to="/employee/login" replace />;
   }
 
-  if (!allow.includes(employee.role)) {
+  if (!allow.includes(employee.role_id as RoleId)) {
     return <Navigate to="/campaigns" replace />;
   }
 

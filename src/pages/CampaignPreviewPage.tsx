@@ -93,7 +93,7 @@ export function CampaignPreviewPage() {
                 <div>
                   <p className="text-sm text-gray-600">Campaign Name</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {campaign?.name}
+                    {campaign?.campaign_name}
                   </p>
                 </div>
 
@@ -166,9 +166,9 @@ export function CampaignPreviewPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {eligibleUsers.map(user => (
-                      <tr key={user.id} className="hover:bg-gray-50">
+                      <tr key={user.user_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {user.full_name}
+                          {user.name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {user.email}

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, UserPreference } from '../lib/supabase';
 
 export function UserPreferenceLoginPage() {
   const navigate = useNavigate();
@@ -17,48 +16,35 @@ export function UserPreferenceLoginPage() {
     setMessage('');
 
     try {
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .maybeSingle();
+      const response = await fetch(
+        'http://localhost:9100/auth/user/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
 
-      if (error || !user || user.password_hash !== password) {
-        setMessage('Invalid email or password');
-        return;
+      if (!response.ok) {
+        throw new Error('Invalid email or password');
       }
 
-      const { data: prefs } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const data = await response.json();
 
-      // Ensure preferences exist
-      if (!prefs) {
-        const defaultPrefs: Omit<UserPreference, 'id'> = {
-          user_id: user.id,
-          offers: true,
-          order_updates: true,
-          newsletter: true,
-          email_channel: true,
-          sms_channel: false,
-          push_channel: false,
-          updated_at: new Date().toISOString(),
-        };
-
-        await supabase.from('user_preferences').insert([defaultPrefs]);
-      }
-
-      // Route to preferences page
-      navigate(`/user/${user.id}/preferences`);
-    } catch {
-      setMessage('Something went wrong. Please try again.');
+      // ✅ Redirect to User Preference Portal
+      navigate(`/user/${data.user_id}/preferences`);
+    } catch (err: any) {
+      setMessage(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white p-4">

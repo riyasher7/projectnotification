@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Filter } from 'lucide-react';
 import { Layout } from '../components/Layout';
-import { supabase, NotificationLog, Campaign } from '../lib/supabase';
+import { supabase, CampaignLog, Campaign } from '../lib/supabase';
 
-type LogWithDetails = NotificationLog & {
+
+type LogWithDetails = CampaignLog & {
   campaign?: Campaign;
-  user?: { full_name: string; email: string };
+  user?: {
+    name: string;
+    email: string;
+  };
 };
 
 export function NotificationLogsPage() {
@@ -123,8 +127,8 @@ export function NotificationLogsPage() {
             >
               <option value="">All Campaigns</option>
               {campaigns.map(campaign => (
-                <option key={campaign.id} value={campaign.id}>
-                  {campaign.name}
+                <option key={campaign.campaign_id} value={campaign.campaign_id}>
+                  {campaign.campaign_name}
                 </option>
               ))}
             </select>

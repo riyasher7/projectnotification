@@ -50,7 +50,7 @@ export function CampaignManagementPage() {
         {
           ...formData,
           city_filter: formData.city_filter || null,
-          created_by: employee?.id,
+          created_by: employee?.employee_id,
           status: 'draft',
         },
       ]);
@@ -115,14 +115,14 @@ export function CampaignManagementPage() {
           <div className="grid gap-6">
             {campaigns.map(campaign => (
               <div
-                key={campaign.id}
+                key={campaign.campaign_id}
                 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
                       <h3 className="text-xl font-bold text-gray-800">
-                        {campaign.name}
+                        {campaign.campaign_name}
                       </h3>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -163,11 +163,11 @@ export function CampaignManagementPage() {
                         ).toLocaleDateString()}
                       </p>
 
-                      {campaign.sent_at && (
+                      {campaign.created_at && (
                         <p>
                           <span className="font-medium">Sent:</span>{' '}
                           {new Date(
-                            campaign.sent_at
+                            campaign.created_at
                           ).toLocaleDateString()}
                         </p>
                       )}
@@ -178,7 +178,7 @@ export function CampaignManagementPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() =>
-                        navigate(`/campaigns/${campaign.id}/preview`)
+                        navigate(`/campaigns/${campaign.campaign_id}/preview`)
                       }
                       className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center space-x-2 transition-colors"
                     >
@@ -189,7 +189,7 @@ export function CampaignManagementPage() {
                     {campaign.status === 'draft' && !isViewer && (
                       <button
                         onClick={() =>
-                          navigate(`/campaigns/${campaign.id}/send`)
+                          navigate(`/campaigns/${campaign.campaign_id}/send`)
                         }
                         className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center space-x-2 transition-colors"
                       >

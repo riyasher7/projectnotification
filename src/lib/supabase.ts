@@ -68,6 +68,7 @@ export type Campaign = {
   campaign_name: string;
   notification_type: 'offers' | 'order_updates' | 'newsletter';
   city_filter: string | null;
+  content: 'string' | null;
   status: 'draft' | 'sent';
   created_by: number; // employee_id
   created_at: string;

@@ -64,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /* -------------------- Role helpers -------------------- */
-  const isAdmin = employee?.role === 'admin';
-  const isCreator = employee?.role === 'creator';
-  const isViewer = employee?.role === 'viewer';
+  const isAdmin = employee?.role_id === 1;
+  const isCreator = employee?.role_id === 2;
+  const isViewer = employee?.role_id === 3;
 
   return (
     <AuthContext.Provider

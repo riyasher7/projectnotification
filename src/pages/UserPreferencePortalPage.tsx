@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase, UserPreference } from '../lib/supabase';
 
-type PreferenceToggleKey =
-  | 'promotional_offers'
+type PreferenceToggleKey = keyof Pick<
+  UserPreference,
+  | 'offers'
   | 'order_updates'
-  | 'newsletters'
+  | 'newsletter'
   | 'email_channel'
   | 'sms_channel'
-  | 'push_channel';
+  | 'push_channel'
+>;
+
+type UserPreference = {
+  id: string;
+  user_id: string;
+  offers: boolean;
+  order_updates: boolean;
+  newsletter: boolean;
+  email_channel: boolean;
+  sms_channel: boolean;
+  push_channel: boolean;
+};
 
 type ToggleRowProps = {
   label: string;
@@ -31,20 +43,34 @@ export function UserPreferenceSettingsPage() {
   }, [userId]);
 
   const fetchPreferences = async () => {
+    if (!userId) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('user_preferences')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
 
-    if (error) {
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(
+        `http://localhost:9100/users/${userId}/preferences`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch preferences');
+      }
+
+      const data = await res.json();
       setPreferences(data);
+    } catch (err) {
+      console.error('Error fetching preferences:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+
 
   const toggle = (key: PreferenceToggleKey) => {
     if (!preferences) return;
@@ -60,27 +86,45 @@ export function UserPreferenceSettingsPage() {
     setSaving(true);
     setMessage('');
 
-    const { error } = await supabase
-      .from('user_preferences')
-      .upsert({ ...preferences, user_id: userId });
+    try {
+      const res = await fetch(
+        `http://localhost:9100/users/${userId}/preferences`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            offers: preferences.offers,
+            order_updates: preferences.order_updates,
+            newsletter: preferences.newsletter,
+            email_channel: preferences.email_channel,
+            sms_channel: preferences.sms_channel,
+            push_channel: preferences.push_channel,
+          }),
+        }
+      );
 
-    if (error) {
-      setMessage('Failed to save preferences');
-    } else {
+      if (!res.ok) {
+        throw new Error('Save failed');
+      }
+
       setMessage('Preferences saved successfully');
+    } catch (err) {
+      setMessage('Failed to save preferences');
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
+
 
   const ToggleRow = ({ label, field }: ToggleRowProps) => (
     <div className="flex justify-between items-center py-3 border-b">
       <span>{label}</span>
       <button
         onClick={() => toggle(field)}
-        className={`h-6 w-11 rounded-full transition-colors ${
-          preferences?.[field] ? 'bg-pink-600' : 'bg-gray-300'
-        }`}
+        className={`h-6 w-11 rounded-full transition-colors ${preferences?.[field] ? 'bg-pink-600' : 'bg-gray-300'
+          }`}
       />
     </div>
   );
@@ -119,9 +163,9 @@ export function UserPreferenceSettingsPage() {
 
           <div>
             <h3 className="font-semibold mb-2">Notification Types</h3>
-            <ToggleRow label="Promotional Offers" field="promotional_offers" />
+            <ToggleRow label="Offers" field="offers" />
             <ToggleRow label="Order Updates" field="order_updates" />
-            <ToggleRow label="Newsletters" field="newsletters" />
+            <ToggleRow label="Newsletter" field="newsletter" />
           </div>
 
           <div>

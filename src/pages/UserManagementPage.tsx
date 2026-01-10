@@ -46,7 +46,7 @@ export function UserManagementPage() {
         const { error } = await supabase
           .from('users')
           .update(formData)
-          .eq('id', editingUser.id);
+          .eq('id', editingUser.user_id);
 
         if (error) throw error;
       } else {
@@ -93,7 +93,7 @@ export function UserManagementPage() {
       const { error } = await supabase
         .from('users')
         .update({ is_active: !user.is_active })
-        .eq('id', user.id);
+        .eq('id', user.user_id);
 
       if (error) throw error;
       fetchUsers();
@@ -106,8 +106,8 @@ export function UserManagementPage() {
     setEditingUser(user);
     setFormData({
       email: user.email,
-      full_name: user.full_name,
-      city: user.city,
+      full_name: user.name,
+      city: user.city ?? '',
       is_active: user.is_active,
     });
     setShowModal(true);
@@ -170,9 +170,9 @@ export function UserManagementPage() {
 
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map(user => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.user_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {user.full_name}
+                      {user.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {user.email}
@@ -194,7 +194,7 @@ export function UserManagementPage() {
                     </td>
                     <td className="px-6 py-4 space-x-2">
                       <button
-                        onClick={() => viewPreferences(user.id)}
+                        onClick={() => viewPreferences(user.user_id)}
                         className="text-blue-600 hover:text-blue-900"
                         title="View Preferences"
                       >
@@ -208,7 +208,7 @@ export function UserManagementPage() {
                         <Edit size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() => handleDelete(user.user_id)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete"
                       >

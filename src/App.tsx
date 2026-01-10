@@ -35,13 +35,10 @@ function AppRoutes() {
       {/* User */}
       <Route path="/user/login" element={<UserPreferenceLoginPage />} />
       <Route
-        path="/user/preferences"
-        element={
-          <UserRoute>
-            <UserPreferenceSettingsPage />
-          </UserRoute>
-        }
+        path="/user/:userId/preferences"
+        element={<UserPreferenceSettingsPage />}
       />
+
 
       {/* Employee */}
       <Route path="/employee/login" element={<LoginPage />} />
@@ -51,7 +48,7 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <RoleRoute allow={['admin']}>
+          <RoleRoute allow={[1]}>
             <DashboardPage />
           </RoleRoute>
         }
@@ -60,26 +57,26 @@ function AppRoutes() {
       <Route
         path="/users"
         element={
-          <RoleRoute allow={['admin', 'creator']}>
+          <RoleRoute allow={[1, 2]}>
             <UserManagementPage />
           </RoleRoute>
         }
       />
 
-      {/* Campaigns */}
       <Route
         path="/campaigns"
         element={
-          <RoleRoute allow={['admin', 'creator', 'viewer']}>
+          <RoleRoute allow={[1, 2, 3]}>
             <CampaignManagementPage />
           </RoleRoute>
         }
       />
 
+
       <Route
         path="/campaigns/:id/preview"
         element={
-          <RoleRoute allow={['admin', 'creator', 'viewer']}>
+          <RoleRoute allow={[1, 2, 3]}>
             <CampaignPreviewPage />
           </RoleRoute>
         }
@@ -88,7 +85,7 @@ function AppRoutes() {
       <Route
         path="/campaigns/:id/send"
         element={
-          <RoleRoute allow={['admin', 'creator']}>
+          <RoleRoute allow={[1, 3]}>
             <CampaignSendPage />
           </RoleRoute>
         }
@@ -98,7 +95,7 @@ function AppRoutes() {
       <Route
         path="/logs"
         element={
-          <RoleRoute allow={['admin']}>
+          <RoleRoute allow={[1]}>
             <NotificationLogsPage />
           </RoleRoute>
         }

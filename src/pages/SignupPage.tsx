@@ -6,7 +6,6 @@ import { supabase } from '../lib/supabase';
 export function SignupPage() {
   const navigate = useNavigate();
 
-  const [userID, setUserID] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -24,29 +23,51 @@ export function SignupPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('employees').insert([
-        {
-          name,
-          email,
-          password_hash: password, // ⚠️ hash in production
-          role: 'viewer',
-          is_active: true,
-          phone_number: phoneNumber,
-          city,
-          gender,
-        },
-      ]);
+      // 1️⃣ Insert user
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .insert([
+          {
+            name: name,
+            email,
+            password: password, // ⚠️ hash later in backend
+            phone: phoneNumber,
+            city,
+            gender,
+            is_active: true,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (userError) throw userError;
 
-      // Redirect to employee login
-      navigate('/employee/login');
-    } catch {
-      setError('Signup failed. Email may already exist.');
+      // 2️⃣ Create default preferences
+      const { error: prefError } = await supabase
+        .from('user_preferences')
+        .insert([
+          {
+            user_id: user.id,
+            offers: true,
+            order_updates: true,
+            newsletter: true,
+            email_channel: true,
+            sms_channel: false,
+            push_channel: false,
+          },
+        ]);
+
+      if (prefError) throw prefError;
+
+      // 3️⃣ Redirect to user login
+      navigate('/user/login');
+    } catch (err: any) {
+      setError(err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
@@ -68,18 +89,6 @@ export function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                UserID
-              </label>
-              <input
-                type="varchar"
-                value={userID}
-                onChange={e => setUserID(e.target.value)}
-                required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
