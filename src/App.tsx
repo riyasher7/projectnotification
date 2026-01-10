@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { CampaignManagementPage } from './pages/CampaignManagementPage';
 import { CampaignPreviewPage } from './pages/CampaignPreviewPage';
+import { CampaignRecipientsPage } from './pages/CampaignRecipientsPage';
 import { CampaignSendPage } from './pages/CampaignSendPage';
 import { NotificationLogsPage } from './pages/NotificationLogsPage';
 import { UserPreferenceLoginPage } from './pages/UsersLogin';
@@ -80,6 +81,10 @@ function AppRoutes() {
             <CampaignPreviewPage />
           </RoleRoute>
         }
+      />
+      <Route
+        path="/campaigns/:id/recipients"
+        element={<CampaignRecipientsPage />}
       />
 
       <Route

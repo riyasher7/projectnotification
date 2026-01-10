@@ -11,7 +11,7 @@ export type Campaign = {
   city_filter: string | null;
   content: string;
   created_by: string;
-  status: 'active' | 'draft' | 'sent';
+  status: 'draft' | 'sent';
   created_at: string;
 };
 
