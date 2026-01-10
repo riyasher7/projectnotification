@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+//import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
@@ -20,19 +20,25 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .maybeSingle();
+      const response = await fetch(
+        'http://localhost:9100/auth/employee/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
 
-      if (error) throw error;
-
-      if (!data || data.password_hash !== password) {
-        setError('Invalid email or password');
-        return;
+      if (!response.ok) {
+        throw new Error('Invalid email or password');
       }
+
+      const data = await response.json();
 
       loginEmployee(data);
 
@@ -42,12 +48,13 @@ export function LoginPage() {
       } else {
         navigate('/campaigns');
       }
-    } catch {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
