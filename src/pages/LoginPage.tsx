@@ -43,7 +43,7 @@ export function LoginPage() {
       loginEmployee(data);
 
       // 🔀 Redirect based on role
-      if (data.role === 'admin') {
+      if (data.role_id === 1) {
         navigate('/dashboard');
       } else {
         navigate('/campaigns');
