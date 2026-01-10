@@ -21,7 +21,7 @@ export function LoginPage() {
 
     try {
       const response = await fetch(
-        'http://localhost:9100/auth/employee/login',
+        'http://127.0.0.1:9100/auth/employee/login',
         {
           method: 'POST',
           headers: {

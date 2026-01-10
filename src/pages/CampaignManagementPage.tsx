@@ -2,8 +2,18 @@ import { useEffect, useState } from 'react';
 import { Plus, Eye, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { supabase, Campaign } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+
+export type Campaign = {
+  campaign_id: string;
+  campaign_name: string;
+  notification_type: string;
+  city_filter: string | null;
+  content: string;
+  created_by: string;
+  status: 'active' | 'draft' | 'sent';
+  created_at: string;
+};
 
 export function CampaignManagementPage() {
   const navigate = useNavigate();
@@ -26,36 +36,59 @@ export function CampaignManagementPage() {
     fetchCampaigns();
   }, []);
 
+
   const fetchCampaigns = async () => {
     try {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/campaigns`
+      );
 
-      if (error) throw error;
-      setCampaigns(data || []);
-    } catch (error) {
-      console.error('Error fetching campaigns:', error);
+      if (!res.ok) {
+        throw new Error('Failed to fetch campaigns');
+      }
+
+      const data: Campaign[] = await res.json();
+      setCampaigns(data);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+  const notificationTypeMap: Record<string, string> = {
+    promotional_offers: "offers",
+    order_updates: "order_updates",
+    newsletters: "newsletters",
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const mappedType = notificationTypeMap[formData.notification_type];
 
+    if (!mappedType) {
+      alert("Invalid notification type");
+      return;
+    }
     try {
-      const { error } = await supabase.from('campaigns').insert([
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
         {
-          ...formData,
-          city_filter: formData.city_filter || null,
-          created_by: employee?.employee_id,
-          status: 'draft',
-        },
-      ]);
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaign_name: formData.name,              // ✅ correct
+            notification_type: mappedType,
+            city_filter: formData.city_filter || null,
+            content: formData.content,
+            created_by: employee?.employee_id,                // ✅ REQUIRED
+          }),
+        }
+      );
 
-      if (error) throw error;
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign');
+      }
 
       setShowModal(false);
       setFormData({
@@ -67,10 +100,11 @@ export function CampaignManagementPage() {
 
       fetchCampaigns();
     } catch (error) {
-      console.error('Error creating campaign:', error);
+      console.error(error);
       alert('Failed to create campaign');
     }
   };
+
 
   const getNotificationTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -125,11 +159,10 @@ export function CampaignManagementPage() {
                         {campaign.campaign_name}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          campaign.status === 'sent'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'sent'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                          }`}
                       >
                         {campaign.status.charAt(0).toUpperCase() +
                           campaign.status.slice(1)}
