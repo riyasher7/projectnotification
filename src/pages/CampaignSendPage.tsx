@@ -23,7 +23,7 @@ export function CampaignSendPage() {
       const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select('*')
-        .eq('id', campaignId)
+        .eq('campaign_id', campaignId)
         .single();
 
       if (campaignError) throw campaignError;
@@ -41,14 +41,21 @@ export function CampaignSendPage() {
       const { data: usersData, error: usersError } = await usersQuery;
       if (usersError) throw usersError;
 
+      const prefKeyMap: Record<string, string> = {
+        offers: 'offers',
+        order_updates: 'order_updates',
+        newsletters: 'newsletter',
+      };
+
       const filtered =
         usersData?.filter((user: any) => {
-          const prefs = user.user_preferences?.[0];
+          const prefs = user.user_preferences;
           if (!prefs) return false;
 
-          const prefKey = campaignData.notification_type;
+          const prefKey = prefKeyMap[campaignData.notification_type];
           return prefs[prefKey] === true;
         }) || [];
+
 
       setUserCount(filtered.length);
     } catch (error) {
@@ -59,61 +66,30 @@ export function CampaignSendPage() {
   };
 
   const handleSendCampaign = async () => {
-    if (!campaign || !campaignId) return;
+    if (!campaignId) return;
 
     setSending(true);
     try {
-      let usersQuery = supabase
-        .from('users')
-        .select('*, user_preferences(*)')
-        .eq('is_active', true);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/campaigns/${campaignId}/send`,
+        { method: 'POST' }
+      );
 
-      if (campaign.city_filter) {
-        usersQuery = usersQuery.eq('city', campaign.city_filter);
+      if (!res.ok) {
+        throw new Error('Failed to send campaign');
       }
 
-      const { data: usersData, error: usersError } = await usersQuery;
-      if (usersError) throw usersError;
-
-      const eligibleUsers =
-        usersData?.filter((user: any) => {
-          const prefs = user.user_preferences?.[0];
-          if (!prefs) return false;
-
-          const prefKey = campaign.notification_type;
-          return prefs[prefKey] === true;
-        }) || [];
-
-      const notificationLogs = eligibleUsers.map((user: any) => ({
-        campaign_id: campaignId,
-        user_id: user.id,
-        status: Math.random() > 0.1 ? 'success' : 'failed',
-      }));
-
-      if (notificationLogs.length > 0) {
-        const { error: logsError } = await supabase
-          .from('notification_logs')
-          .insert(notificationLogs);
-
-        if (logsError) throw logsError;
-      }
-
-      const { error: updateError } = await supabase
-        .from('campaigns')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
-        .eq('id', campaignId);
-
-      if (updateError) throw updateError;
-
-      alert(`Campaign sent successfully to ${eligibleUsers.length} users!`);
-      navigate('/campaigns');
-    } catch (error) {
-      console.error('Error sending campaign:', error);
+      const data = await res.json();
+      alert(`Campaign sent to ${data.sent_to} users`);
+      navigate(`/campaigns/${campaignId}/recipients`);
+    } catch (err) {
+      console.error(err);
       alert('Failed to send campaign');
     } finally {
       setSending(false);
     }
   };
+
 
   return (
     <Layout>
