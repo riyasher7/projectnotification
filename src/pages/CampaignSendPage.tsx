@@ -47,7 +47,7 @@ export function CampaignSendPage() {
       const prefKeyMap: Record<string, string> = {
         offers: 'offers',
         order_updates: 'order_updates',
-        newsletters: 'newsletter',
+        newsletter: 'newsletter',
       };
 
       const filtered =

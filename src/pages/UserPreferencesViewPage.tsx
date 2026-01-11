@@ -135,7 +135,7 @@ export function UserPreferencesViewPage() {
                   value={preferences?.order_updates || false}
                 />
                 <PreferenceItem
-                  label="Newsletters"
+                  label="Newsletter"
                   value={preferences?.newsletter || false}
                 />
               </div>

@@ -27,7 +27,7 @@ export function CampaignManagementPage() {
     notification_type: 'promotional_offers' as
       | 'promotional_offers'
       | 'order_updates'
-      | 'newsletters',
+      | 'newsletter',
     city_filter: '',
     content: '',
   });
@@ -58,7 +58,7 @@ export function CampaignManagementPage() {
   const notificationTypeMap: Record<string, string> = {
     promotional_offers: "offers",
     order_updates: "order_updates",
-    newsletters: "newsletters",
+    newsletter: "newsletter",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,7 +110,7 @@ export function CampaignManagementPage() {
     const labels: Record<string, string> = {
       promotional_offers: 'Promotional Offers',
       order_updates: 'Order Updates',
-      newsletters: 'Newsletters',
+      newsletter: 'Newsletter',
     };
     return labels[type] || type;
   };
@@ -288,7 +288,7 @@ export function CampaignManagementPage() {
                       Promotional Offers
                     </option>
                     <option value="order_updates">Order Updates</option>
-                    <option value="newsletters">Newsletters</option>
+                    <option value="newslettes">Newsletter</option>
                   </select>
                 </div>
 
