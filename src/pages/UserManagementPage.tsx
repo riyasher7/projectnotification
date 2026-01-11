@@ -6,7 +6,7 @@ import { supabase, User } from '../lib/supabase';
 
 export function UserManagementPage() {
   const navigate = useNavigate();
-
+  const [csvUploading, setCsvUploading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -105,6 +105,31 @@ export function UserManagementPage() {
     navigate(`/users/${userId}/preferences`);
   };
 
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(
+      'http://localhost:9100/admin/users/upload-csv',
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      alert('CSV upload failed');
+      return;
+    }
+
+    fetchUsers();
+  };
+
+
+
   return (
     <Layout>
       <div className="px-4">
@@ -119,13 +144,26 @@ export function UserManagementPage() {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all"
-          >
-            <Plus size={20} />
-            <span>Add User</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Add User
+            </button>
+
+            <label className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2">
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={handleCsvUpload}
+              />
+              Import CSV
+            </label>
+          </div>
+
         </div>
 
         {/* Table */}
