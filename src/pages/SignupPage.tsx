@@ -47,7 +47,7 @@ export function SignupPage() {
         .from('user_preferences')
         .insert([
           {
-            user_id: user.id,
+            user_id: user.user_id,
             offers: true,
             order_updates: true,
             newsletter: true,
@@ -59,8 +59,8 @@ export function SignupPage() {
 
       if (prefError) throw prefError;
 
-      // 3️⃣ Redirect to user login
-      navigate('/user/login');
+      // 3️⃣ Redirect to user preference portal
+      navigate(`/user/${user.user_id}/preferences`);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {

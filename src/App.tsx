@@ -32,7 +32,7 @@ function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/signup" element={<SignupPage />} />
-
+      
       {/* User */}
       <Route path="/user/login" element={<UserPreferenceLoginPage />} />
       <Route
@@ -95,6 +95,7 @@ function AppRoutes() {
           </RoleRoute>
         }
       />
+      
 
       {/* Logs */}
       <Route

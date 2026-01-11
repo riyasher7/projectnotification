@@ -23,7 +23,7 @@ export function CampaignSendPage() {
       const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select('*')
-        .eq('id', campaignId)
+        .eq('campaign_id', campaignId)
         .single();
 
       if (campaignError) throw campaignError;
