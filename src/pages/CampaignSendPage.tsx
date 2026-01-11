@@ -12,6 +12,9 @@ export function CampaignSendPage() {
   const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [sentCount, setSentCount] = useState(0);
+
 
   useEffect(() => {
     if (!campaignId) return;
@@ -69,6 +72,7 @@ export function CampaignSendPage() {
     if (!campaignId) return;
 
     setSending(true);
+
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/campaigns/${campaignId}/send`,
@@ -80,8 +84,9 @@ export function CampaignSendPage() {
       }
 
       const data = await res.json();
-      alert(`Campaign sent to ${data.sent_to} users`);
-      navigate(`/campaigns/${campaignId}/recipients`);
+
+      setSentCount(data.sent_to);
+      setShowSuccess(true);
     } catch (err) {
       console.error(err);
       alert('Failed to send campaign');
@@ -89,6 +94,7 @@ export function CampaignSendPage() {
       setSending(false);
     }
   };
+
 
 
   return (
@@ -162,6 +168,47 @@ export function CampaignSendPage() {
           </div>
         )}
       </div>
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Send className="text-green-600" size={32} />
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Campaign Sent
+            </h2>
+
+            <p className="text-gray-600 mb-6">
+              Notification successfully sent to{' '}
+              <span className="font-semibold">{sentCount}</span> users.
+            </p>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  setShowSuccess(false);
+                  navigate('/notification-logs');
+                }}
+                className="flex-1 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-semibold"
+              >
+                View Logs
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSuccess(false);
+                  navigate('/campaigns');
+                }}
+                className="flex-1 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold text-gray-700"
+              >
+                Back to Campaigns
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </Layout>
   );
 }

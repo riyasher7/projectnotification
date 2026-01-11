@@ -43,33 +43,34 @@ export function NotificationLogsPage() {
   };
 
   const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('notification_logs')
-        .select('*, campaigns(*), users(full_name, email)')
-        .order('sent_at', { ascending: false });
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('notification_logs')
+          .select('*, campaigns(*), users(full_name, email)')
+          .order('sent_at', { ascending: false });
 
-      if (selectedCampaign) {
-        query = query.eq('campaign_id', selectedCampaign);
+        if (selectedCampaign) {
+          query = query.eq('campaign_id', selectedCampaign);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setLogs(data || []);
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+      } finally {
+        setLoading(false);
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setLogs(data || []);
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   const getSuccessRate = () => {
-    if (logs.length === 0) return 0;
-    const successCount = logs.filter(log => log.status === 'success').length;
-    return Math.round((successCount / logs.length) * 100);
+    if (!logs.length) return 0;
+    const success = logs.filter(log => log.status === 'success').length;
+    return Math.round((success / logs.length) * 100);
   };
+
 
   return (
     <Layout>
