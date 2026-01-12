@@ -127,7 +127,7 @@ export function CampaignPreviewPage() {
                 onClick={() =>
                   navigate(`/campaigns/${campaign.campaign_id}/recipients`)
                 }
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg font-medium"
+                className="bg-[#FF1774] hover:bg-[#FF1774] text-white px-6 py-3 rounded-lg font-medium"
               >
                 View Recipients
               </button>

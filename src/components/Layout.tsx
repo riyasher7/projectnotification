@@ -82,9 +82,9 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-grey-100">
       {/* Top Navigation */}
-      <nav className="bg-gradient-to-r from-pink-500 to-pink-600 shadow-lg">
+      <nav className="bg-gradient-to-r from-white-500 to-white-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Brand + Nav */}
@@ -93,7 +93,7 @@ export function Layout({ children }: LayoutProps) {
                 className="text-2xl font-bold text-white cursor-pointer"
                 onClick={() => navigate('/')}
               >
-                Nykaa
+                <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-1 mx-auto" />
               </h1>
 
               <div className="ml-10 flex items-baseline space-x-4">
@@ -107,8 +107,8 @@ export function Layout({ children }: LayoutProps) {
                       onClick={() => navigate(item.path)}
                       className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-colors ${
                         isActive
-                          ? 'bg-pink-700 text-white'
-                          : 'text-pink-100 hover:bg-pink-600 hover:text-white'
+                          ? 'bg-[#FF1774] text-white'
+                          : 'text-[#FF1774] hover:bg-[#FF1774] hover:text-white'
                       }`}
                     >
                       <Icon size={18} />
@@ -121,9 +121,9 @@ export function Layout({ children }: LayoutProps) {
 
             {/* User + Logout */}
             <div className="flex items-center space-x-4">
-              <div className="text-white text-sm text-right">
+              <div className="text-[#FF1774] text-sm text-right">
                 <div className="font-medium">{employee.email}</div>
-                <div className="text-pink-100 text-xs capitalize">
+                <div className="text-[#FF1774] text-xs capitalize">
                   {getRoleName(employee.role_id as RoleId)}
                 </div>
               </div>
@@ -133,7 +133,7 @@ export function Layout({ children }: LayoutProps) {
                   logout();
                   navigate('/employee/login');
                 }}
-                className="bg-pink-700 hover:bg-pink-800 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-colors"
+                className="bg-[#FF1774] hover:bg-[#FF1774] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-colors"
               >
                 <LogOut size={16} />
                 <span>Logout</span>

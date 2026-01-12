@@ -51,13 +51,14 @@ export function UserPreferenceLoginPage() {
       <div className="max-w-md mx-auto py-10">
         <button
           onClick={() => navigate('/')}
-          className="mb-6 flex items-center text-pink-600"
+          className="mb-6 flex items-center text-[#FF1774]"
         >
           <ArrowLeft size={18} />
           <span className="ml-2">Back</span>
         </button>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
           <h2 className="text-2xl font-bold text-center mb-6">
             User Login
           </h2>
@@ -88,7 +89,7 @@ export function UserPreferenceLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-pink-600 text-white py-3 rounded-lg disabled:opacity-50"
+              className="w-full bg-[#FF1774] text-white py-3 rounded-lg disabled:opacity-50"
             >
               {loading ? 'Checking...' : 'Continue'}
             </button>
@@ -96,7 +97,7 @@ export function UserPreferenceLoginPage() {
             <button
               type="button"
               onClick={() => navigate('/signup')}
-              className="w-full border border-pink-500 text-pink-600 py-3 rounded-lg flex items-center justify-center gap-2"
+              className="w-full border border-[#FF1774] text-[#FF1774] py-3 rounded-lg flex items-center justify-center gap-2"
             >
               <UserPlus size={18} />
               Sign up

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 
@@ -49,7 +49,7 @@ export function EmployeeManagementPage() {
     if (!confirm('Delete this employee?')) return;
 
     const res = await fetch(
-      `http://localhost:9100/admin/employees/${employeeId}`,
+      `http://localhost:9100/admin/employeesmgmt/${employeeId}`,
       {
         method: 'DELETE',
         credentials: 'include',
@@ -65,7 +65,15 @@ export function EmployeeManagementPage() {
         <h1 className="text-3xl font-bold mb-6">
           Employee Management
         </h1>
-
+      <div className="flex justify-end gap-3 mb-6">
+        <button
+          onClick={() => navigate('http://localhost:9100/admin/employeesmgmt')}
+          className="bg-gradient-to-r from-[#FF1774] to-[#FF1774] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+        >
+          <Plus size={20} />
+          Add Employee
+        </button>
+      </div>
         {loading ? (
           <div className="text-center py-12">Loading...</div>
         ) : (

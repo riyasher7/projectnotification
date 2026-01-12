@@ -123,7 +123,7 @@ export function UserPreferenceSettingsPage() {
       <span>{label}</span>
       <button
         onClick={() => toggle(field)}
-        className={`h-6 w-11 rounded-full transition-colors ${preferences?.[field] ? 'bg-pink-600' : 'bg-gray-300'
+        className={`h-6 w-11 rounded-full transition-colors ${preferences?.[field] ? 'bg-[#FF1774]' : 'bg-gray-300'
           }`}
       />
     </div>
@@ -132,7 +132,7 @@ export function UserPreferenceSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF1774]" />
       </div>
     );
   }
@@ -158,6 +158,7 @@ export function UserPreferenceSettingsPage() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <h2 className="text-2xl font-bold text-center">
+            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
             Notification Preferences
           </h2>
 
@@ -184,7 +185,7 @@ export function UserPreferenceSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-pink-600 text-white py-3 rounded-lg flex justify-center items-center gap-2 disabled:opacity-50"
+            className="w-full bg-[#FF1774] text-white py-3 rounded-lg flex justify-center items-center gap-2 disabled:opacity-50"
           >
             <Save size={18} />
             {saving ? 'Saving...' : 'Save Preferences'}

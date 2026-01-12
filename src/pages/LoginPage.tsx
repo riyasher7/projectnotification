@@ -61,7 +61,7 @@ export function LoginPage() {
       <div className="max-w-md w-full">
         <button
           onClick={() => navigate('/')}
-          className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700 transition-colors"
+          className="mb-6 flex items-center space-x-2 text-[#FF1774] hover:text-[#FF1774] transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Back to Home</span>
@@ -69,7 +69,7 @@ export function LoginPage() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-pink-600 mb-2">Nykaa</h1>
+            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
             <h2 className="text-2xl font-semibold text-gray-800">
               Employee Login
             </h2>
@@ -111,7 +111,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-[#FF1774] to-[#FF1774] text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               <LogIn size={20} />
               <span>{loading ? 'Logging in...' : 'Login'}</span>

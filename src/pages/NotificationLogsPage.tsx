@@ -159,7 +159,7 @@ export function NotificationLogsPage() {
             <p className="text-gray-600 text-sm font-medium">
               Success Rate
             </p>
-            <p className="text-4xl font-bold text-pink-600 mt-2">
+            <p className="text-4xl font-bold text-[#FF1774] mt-2">
               {getSuccessRate()}%
             </p>
           </div>

@@ -132,7 +132,7 @@ export function CampaignManagementPage() {
           {!isViewer && (
             <button
               onClick={() => setShowModal(true)}
-              className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all"
+              className="bg-gradient-to-r from-[#FF1774] to-[#FF1774] hover:from-[#FF1774] hover:to-[#FF1774] text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all"
             >
               <Plus size={20} />
               <span>New Campaign</span>
@@ -155,7 +155,7 @@ export function CampaignManagementPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-xl font-bold text-gray-800">
+                      <h3 className="text-xl font-bold text-[#FF1774]">
                         {campaign.campaign_name}
                       </h3>
                       <span

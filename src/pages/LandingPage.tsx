@@ -8,8 +8,10 @@ export function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-pink-600 mb-4">Nykaa</h1>
-          <p className="text-xl text-gray-600">Campaign Management Portal</p>
+          <div className="text-center mb-12">
+            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-48 h-auto mb-4 mx-auto" />
+            <p className="text-xl text-gray-600">Campaign Management Portal</p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -19,7 +21,7 @@ export function LandingPage() {
             className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all transform hover:scale-105 group"
           >
             <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center group-hover:from-pink-600 group-hover:to-pink-700 transition-all">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#FF1774] to-[#FF1774] rounded-full flex items-center justify-center group-hover:from-[#FF1774] group-hover:to-[#FF1774] transition-all">
                 <Users className="text-white" size={40} />
               </div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -37,7 +39,7 @@ export function LandingPage() {
             className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all transform hover:scale-105 group"
           >
             <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center group-hover:from-pink-600 group-hover:to-pink-700 transition-all">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#FF1774] to-[#FF1774] rounded-full flex items-center justify-center group-hover:from-[#FF1774] group-hover:to-[#FF1774] transition-all">
                 <Settings className="text-white" size={40} />
               </div>
               <h2 className="text-2xl font-bold text-gray-800">
