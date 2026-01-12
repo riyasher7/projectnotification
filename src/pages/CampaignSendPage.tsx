@@ -22,51 +22,55 @@ export function CampaignSendPage() {
   }, [campaignId]);
 
   const fetchCampaignAndCount = async () => {
-    try {
-      const { data: campaignData, error: campaignError } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .single();
+  try {
+    const { data: campaignData, error: campaignError } = await supabase
+      .from('campaigns')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .single();
 
-      if (campaignError) throw campaignError;
-      setCampaign(campaignData);
+    if (campaignError) throw campaignError;
+    setCampaign(campaignData);
 
-      let usersQuery = supabase
-        .from('users')
-        .select('*, user_preferences(*)')
-        .eq('is_active', true);
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('*, user_preferences(*)')
+      .eq('is_active', true);
 
-      if (campaignData.city_filter) {
-        usersQuery = usersQuery.eq('city', campaignData.city_filter);
-      }
+    if (usersError) throw usersError;
 
-      const { data: usersData, error: usersError } = await usersQuery;
-      if (usersError) throw usersError;
+    const prefKeyMap: Record<string, string> = {
+      offers: 'offers',
+      order_updates: 'order_updates',
+      newsletter: 'newsletter',
+    };
 
-      const prefKeyMap: Record<string, string> = {
-        offers: 'offers',
-        order_updates: 'order_updates',
-        newsletter: 'newsletter',
-      };
+    const cityFilter = campaignData.city_filter?.toLowerCase();
 
-      const filtered =
-        usersData?.filter((user: any) => {
-          const prefs = user.user_preferences;
-          if (!prefs) return false;
+    const filtered =
+      usersData?.filter((user: any) => {
+        // ✅ city filter (case-insensitive)
+        if (cityFilter) {
+          const userCity = user.city?.toLowerCase();
+          if (userCity !== cityFilter) return false;
+        }
 
-          const prefKey = prefKeyMap[campaignData.notification_type];
-          return prefs[prefKey] === true;
-        }) || [];
+        // ✅ preference filter
+        const prefs = user.user_preferences;
+        if (!prefs) return false;
 
+        const prefKey = prefKeyMap[campaignData.notification_type];
+        return prefs[prefKey] === true;
+      }) || [];
 
-      setUserCount(filtered.length);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setUserCount(filtered.length);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSendCampaign = async () => {
     if (!campaignId) return;
@@ -87,6 +91,7 @@ export function CampaignSendPage() {
 
       setSentCount(data.sent_to);
       setShowSuccess(true);
+      //setUserCount(data.length);
     } catch (err) {
       console.error(err);
       alert('Failed to send campaign');
@@ -137,7 +142,7 @@ export function CampaignSendPage() {
                 <div>
                   <p className="text-sm text-gray-600">Eligible Recipients</p>
                   <p className="text-3xl font-bold text-pink-600">
-                    {sentCount} Users
+                    {userCount} Users
                   </p>
                 </div>
                 <div>
