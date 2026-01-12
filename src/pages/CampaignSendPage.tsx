@@ -137,7 +137,7 @@ export function CampaignSendPage() {
                 <div>
                   <p className="text-sm text-gray-600">Eligible Recipients</p>
                   <p className="text-3xl font-bold text-pink-600">
-                    {userCount} Users
+                    {sentCount} Users
                   </p>
                 </div>
                 <div>

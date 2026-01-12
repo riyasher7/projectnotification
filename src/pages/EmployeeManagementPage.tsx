@@ -43,7 +43,7 @@ export function EmployeeManagementPage() {
       setLoading(false);
     }
   };
-
+  
   // 🗑 Delete employee (admin-only backend route)
   const deleteEmployee = async (employeeId: number) => {
     if (!confirm('Delete this employee?')) return;
@@ -67,7 +67,7 @@ export function EmployeeManagementPage() {
         </h1>
       <div className="flex justify-end gap-3 mb-6">
         <button
-          onClick={() => navigate('http://localhost:9100/admin/employeesmgmt')}
+          onClick={() => navigate('/dashboard')}
           className="bg-gradient-to-r from-[#FF1774] to-[#FF1774] text-white px-4 py-2 rounded-lg flex items-center gap-2"
         >
           <Plus size={20} />

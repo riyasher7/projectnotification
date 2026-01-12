@@ -220,7 +220,7 @@ export function UserManagementPage() {
                     </td>
                     <td className="px-6 py-4 space-x-2">
                       <button
-                        onClick={() => viewPreferences(user.user_id)}
+                        onClick={() => navigate(`/user/${user.user_id}/preferences`)}
                         className="text-blue-600 hover:text-blue-900"
                         title="View Preferences"
                       >
@@ -310,20 +310,6 @@ export function UserManagementPage() {
                   <option value="female">Female</option>
                   <option value="prefer_not_to_say">Prefer not to say</option>
                 </select>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        is_active: e.target.checked,
-                      })
-                    }
-                  />
-                  Active
-                </label>
 
                 <div className="flex gap-3 pt-4">
                   <button
