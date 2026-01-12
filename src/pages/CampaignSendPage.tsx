@@ -188,7 +188,7 @@ export function CampaignSendPage() {
               <button
                 onClick={() => {
                   setShowSuccess(false);
-                  navigate('/notification-logs');
+                  navigate('/logs');
                 }}
                 className="flex-1 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-semibold"
               >

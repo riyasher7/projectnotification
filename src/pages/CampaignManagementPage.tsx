@@ -56,9 +56,9 @@ export function CampaignManagementPage() {
     }
   };
   const notificationTypeMap: Record<string, string> = {
+    newsletter: "newsletter",
     promotional_offers: "offers",
     order_updates: "order_updates",
-    newsletter: "newsletter",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,11 +76,11 @@ export function CampaignManagementPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            campaign_name: formData.name,              // ✅ correct
+            campaign_name: formData.name,             
             notification_type: mappedType,
             city_filter: formData.city_filter || null,
             content: formData.content,
-            created_by: employee?.employee_id,                // ✅ REQUIRED
+            created_by: employee?.employee_id,           
           }),
         }
       );
@@ -288,7 +288,7 @@ export function CampaignManagementPage() {
                       Promotional Offers
                     </option>
                     <option value="order_updates">Order Updates</option>
-                    <option value="newslettes">Newsletter</option>
+                    <option value="newsletter">Newsletter</option>
                   </select>
                 </div>
 

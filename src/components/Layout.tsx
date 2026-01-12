@@ -64,6 +64,12 @@ export function Layout({ children }: LayoutProps) {
       roles: [1, 2, 3],
     },
     {
+      name: 'Employees',
+      icon: Users,
+      path: '/employeesmgmt',
+      roles: [1],
+    },
+    {
       name: 'Notifications',
       icon: Bell,
       path: '/logs',

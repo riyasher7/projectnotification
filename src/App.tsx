@@ -16,6 +16,7 @@ import { UserPreferenceSettingsPage } from './pages/UserPreferencePortalPage';
 import { EmployeeRoute } from './components/EmployeeRoute';
 import { UserRoute } from './components/UserRoute';
 import { RoleRoute } from './components/RoleRoute';
+import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
 
 function EmployeeRedirect() {
   const { employee } = useAuth();
@@ -60,6 +61,15 @@ function AppRoutes() {
         element={
           <RoleRoute allow={[1, 2]}>
             <UserManagementPage />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/employeesmgmt"
+        element={
+          <RoleRoute allow={[1]}>
+            <EmployeeManagementPage />
           </RoleRoute>
         }
       />
