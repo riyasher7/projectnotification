@@ -1,4 +1,4 @@
-import { Users, Settings } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function LandingPage() {
@@ -6,49 +6,37 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+      <div className="max-w-md w-full">
         <div className="text-center mb-12">
-          <div className="text-center mb-12">
-            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-48 h-auto mb-4 mx-auto" />
-            <p className="text-xl text-gray-600">Campaign Management Portal</p>
-          </div>
+          <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-48 h-auto mb-6 mx-auto" />
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Nykaa</h1>
+          <p className="text-lg text-gray-600">Campaign Management Portal</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Employee Login */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-4">
           <button
-            onClick={() => navigate('/employee/login')}
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all transform hover:scale-105 group"
+            onClick={() => navigate('/login')}
+            className="w-full bg-gradient-to-r from-[#FF1774] to-[#FF1774] hover:from-[#e01569] hover:to-[#e01569] text-white py-4 rounded-xl flex items-center justify-center space-x-3 transition-all transform hover:scale-105 shadow-lg"
           >
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#FF1774] to-[#FF1774] rounded-full flex items-center justify-center group-hover:from-[#FF1774] group-hover:to-[#FF1774] transition-all">
-                <Users className="text-white" size={40} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Employee Login
-              </h2>
-              <p className="text-gray-600 text-center">
-                Access campaign management, user administration, and analytics
-              </p>
-            </div>
+            <LogIn size={24} />
+            <span className="text-lg font-semibold">Login</span>
           </button>
 
-          {/* User Preference Portal */}
-          <button
-            onClick={() => navigate('/user/login')}
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all transform hover:scale-105 group"
-          >
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#FF1774] to-[#FF1774] rounded-full flex items-center justify-center group-hover:from-[#FF1774] group-hover:to-[#FF1774] transition-all">
-                <Settings className="text-white" size={40} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                User Preference Portal
-              </h2>
-              <p className="text-gray-600 text-center">
-                Manage your notification preferences and communication channels
-              </p>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
             </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">New user?</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/signup')}
+            className="w-full border-2 border-[#FF1774] text-[#FF1774] hover:bg-[#FF1774] hover:text-white py-4 rounded-xl flex items-center justify-center space-x-3 transition-all transform hover:scale-105"
+          >
+            <UserPlus size={24} />
+            <span className="text-lg font-semibold">Sign Up</span>
           </button>
         </div>
       </div>

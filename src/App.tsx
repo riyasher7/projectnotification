@@ -11,7 +11,6 @@ import { CampaignPreviewPage } from './pages/CampaignPreviewPage';
 import { CampaignRecipientsPage } from './pages/CampaignRecipientsPage';
 import { CampaignSendPage } from './pages/CampaignSendPage';
 import { NotificationLogsPage } from './pages/NotificationLogsPage';
-import { UserPreferenceLoginPage } from './pages/UsersLogin';
 import { UserPreferenceSettingsPage } from './pages/UserPreferencePortalPage';
 import { EmployeeRoute } from './components/EmployeeRoute';
 import { UserRoute } from './components/UserRoute';
@@ -25,10 +24,10 @@ import { NewsletterSendPage } from './pages/NewsletterSendPage';
 function EmployeeRedirect() {
   const { employee } = useAuth();
 
-  if (!employee) return <Navigate to="/employee/login" />;
+  if (!employee) return <Navigate to="/login" />;
 
   if (employee.role_id == 1) return <Navigate to="/dashboard" />;
-  return <Navigate to="/campaigns" />;
+  return <Navigate to="/notifications" />;
 }
 
 function AppRoutes() {
@@ -36,18 +35,18 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* User */}
-      <Route path="/user/login" element={<UserPreferenceLoginPage />} />
+      {/* User Preferences */}
       <Route
         path="/user/:userId/preferences"
         element={<UserPreferenceSettingsPage />}
       />
 
-
-      {/* Employee */}
-      <Route path="/employee/login" element={<LoginPage />} />
+      {/* Redirects for backward compatibility */}
+      <Route path="/employee/login" element={<Navigate to="/login" replace />} />
+      <Route path="/user/login" element={<Navigate to="/login" replace />} />
       <Route path="/employee" element={<EmployeeRedirect />} />
 
       {/* Admin */}
@@ -151,7 +150,7 @@ function AppRoutes() {
       <Route
         path="/logs"
         element={
-          <RoleRoute allow={[1]}>
+          <RoleRoute allow={[1, 2, 3]}>
             <NotificationLogsPage />
           </RoleRoute>
         }

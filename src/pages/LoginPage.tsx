@@ -12,7 +12,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { loginEmployee } = useAuth();
+  const { loginEmployee, loginUser } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +20,7 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(
+      let response = await fetch(
         'http://127.0.0.1:9100/auth/employee/login',
         {
           method: 'POST',
@@ -34,20 +34,40 @@ export function LoginPage() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Invalid email or password');
+      if (response.ok) {
+        const data = await response.json();
+        loginEmployee(data);
+
+        if (data.role_id === 1) {
+          navigate('/dashboard');
+        } else {
+          navigate('/notifications');
+        }
+        return;
       }
 
-      const data = await response.json();
+      response = await fetch(
+        'http://127.0.0.1:9100/auth/user/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
 
-      loginEmployee(data);
-
-      // 🔀 Redirect based on role
-      if (data.role_id === 1) {
-        navigate('/dashboard');
-      } else {
-        navigate('/campaigns');
+      if (response.ok) {
+        const data = await response.json();
+        loginUser(data);
+        navigate(`/user/${data.user_id}/preferences`);
+        return;
       }
+
+      throw new Error('Invalid email or password');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -71,7 +91,7 @@ export function LoginPage() {
           <div className="text-center mb-8">
             <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
             <h2 className="text-2xl font-semibold text-gray-800">
-              Employee Login
+              Login
             </h2>
           </div>
 

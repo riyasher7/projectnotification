@@ -6,8 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
  * 1 = Admin
  * 2 = Creator
  * 3 = Viewer
+ * 4 = User
  */
-type RoleId = 1 | 2 | 3;
+type RoleId = 1 | 2 | 3 | 4;
 
 export function RoleRoute({
   children,
@@ -19,11 +20,11 @@ export function RoleRoute({
   const { employee } = useAuth();
 
   if (!employee) {
-    return <Navigate to="/employee/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (!allow.includes(employee.role_id as RoleId)) {
-    return <Navigate to="/campaigns" replace />;
+    return <Navigate to="/notifications" replace />;
   }
 
   return children;

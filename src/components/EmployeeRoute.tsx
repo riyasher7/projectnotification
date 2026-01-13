@@ -9,7 +9,7 @@ export function EmployeeRoute({
   const { employee } = useAuth();
 
   if (!employee) {
-    return <Navigate to="/employee/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

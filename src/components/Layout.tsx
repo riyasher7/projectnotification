@@ -12,8 +12,9 @@ type LayoutProps = {
  * 1 = Admin
  * 2 = Creator
  * 3 = Viewer
+ * 4 = User
  */
-type RoleId = 1 | 2 | 3;
+type RoleId = 1 | 2 | 3 | 4;
 
 type NavItem = {
   name: string;
@@ -30,6 +31,8 @@ const getRoleName = (roleId: RoleId) => {
       return 'Creator';
     case 3:
       return 'Viewer';
+    case 4:
+      return 'User';
     default:
       return 'Unknown';
   }
@@ -58,12 +61,6 @@ export function Layout({ children }: LayoutProps) {
       roles: [1, 2],
     },
     {
-      name: 'Campaigns',
-      icon: Mail,
-      path: '/campaigns',
-      roles: [1, 2, 3],
-    },
-    {
       name: 'Employees',
       icon: Users,
       path: '/employeesmgmt',
@@ -72,8 +69,14 @@ export function Layout({ children }: LayoutProps) {
     {
       name: 'Notifications',
       icon: Bell,
+      path: '/notifications',
+      roles: [1, 2, 3],
+    },
+    {
+      name: 'Logs',
+      icon: Mail,
       path: '/logs',
-      roles: [1, 3],
+      roles: [1, 2, 3],
     },
   ];
 
@@ -131,7 +134,7 @@ export function Layout({ children }: LayoutProps) {
               <button
                 onClick={() => {
                   logout();
-                  navigate('/employee/login');
+                  navigate('/login');
                 }}
                 className="bg-[#FF1774] hover:bg-[#FF1774] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-colors"
               >
