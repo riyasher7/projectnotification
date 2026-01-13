@@ -1,227 +1,127 @@
 import { useEffect, useState } from 'react';
-import { Plus, Eye, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Send } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
 export type Order = {
-    order_id: string;
-    order_name: string;
-    city_filter: string | null;
-    status: 'DRAFT' | 'SENT';
-    created_at: string;
-    created_by: string;
-
+  order_id: string;
+  order_name: string;
+  user_id: string;
+  status: 'PLACED' | 'UPDATE_REQUESTED' | 'SENT';
+  created_at: string;
 };
 
-export function NewsletterManagementPage() {
-    const navigate = useNavigate();
-    const { user, isViewer } = useAuth();
+export function OrderManagementPage() {
+  const { isViewer } = useAuth();
 
-    const [Order, setOrder] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const [formData, setFormData] = useState({
-        name: '',
-        city_filter: '',
-    });
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/orders`
+      );
 
-    const fetchOrders = async () => {
-        try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/orders`
-            );
+      if (!res.ok) throw new Error('Failed to fetch orders');
 
-            if (!res.ok) throw new Error('Failed to fetch newsletters');
+      const data: Order[] = await res.json();
+      setOrders(data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            const data: Order[] = await res.json();
-            setOrder(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const sendUpdate = async (orderId: string) => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}/send-update`,
+        { method: 'POST' }
+      );
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+      if (!res.ok) throw new Error('Failed to send update');
 
-        if (!user?.user_id) {
-            alert('User not authenticated');
-            return;
-        }
+      // Optimistic UI update
+      setOrders(prev =>
+        prev.map(order =>
+          order.order_id === orderId
+            ? { ...order, status: 'SENT' }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error('Error sending update:', error);
+      alert('Failed to send update');
+    }
+  };
 
-        try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/orders`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        news_name: formData.name,
-                        city_filter: formData.city_filter || null,
-                        created_by: user.user_id,
-                    }),
-                }
-            );
+  return (
+    <Layout>
+      <div className="px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Order Management
+          </h1>
+          <p className="text-gray-600 mt-2">
+            View and manage user order update requests
+          </p>
+        </div>
 
-            if (!response.ok) throw new Error('Failed to create newsletter');
+        {loading ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl">
+            No orders found.
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {orders.map(order => (
+              <div
+                key={order.order_id}
+                className="bg-white rounded-xl shadow p-6 flex justify-between items-center"
+              >
+                <div>
+                  <h3 className="font-semibold text-lg">
+                    {order.order_name}
+                  </h3>
 
-            setShowModal(false);
-            setFormData({ name: '', city_filter: ''});
-            fetchOrders();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to create newsletter');
-        }
-    };
+                  <p className="text-sm mt-2">
+                    <b>Status:</b> {order.status}
+                  </p>
 
+                  <p className="text-sm">
+                    <b>Created:</b>{' '}
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </p>
 
-    return (
-        <Layout>
-            <div className="px-4">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">
-                            Newsletter Management
-                        </h1>
-                        <p className="text-gray-600 mt-2">
-                            Create and manage newsletters
-                        </p>
-                    </div>
-
-                    {!isViewer && (
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                        >
-                            <Plus size={20} />
-                            <span>New Newsletter</span>
-                        </button>
-                    )}
+                  <p className="text-sm">
+                    <b>User ID:</b> {order.user_id}
+                  </p>
                 </div>
 
-                {loading ? (
-                    <div className="text-center py-12">Loading...</div>
-                ) : (
-                    <div className="grid gap-6">
-                        {Order.map(Order => (
-                            <div
-                                key={Order.order_id}
-                                className="bg-white rounded-xl shadow p-6"
-                            >
-                                <div className="flex justify-between">
-                                    <div>
-                                        <h3 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                                            {Order.order_name}
-                                        </h3>
-
-                                        <p className="text-sm mt-2">
-                                            <b>Status:</b> {Order.status}
-                                        </p>
-
-                                        {Order.city_filter && (
-                                            <p className="text-sm">
-                                                <b>City:</b> {Order.city_filter}
-                                            </p>
-                                        )}
-                                        <p className="text-sm">
-                                            <b>Created:</b>{' '}
-                                            {new Date(Order.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() =>
-                                                navigate(
-                                                    `/newsletters/${Order.order_id}/preview`
-                                                )
-                                            }
-                                            className="bg-blue-500 text-white px-3 py-2 rounded-lg"
-                                        >
-                                            <Eye size={16} />
-                                        </button>
-
-                                        {Order.status === 'DRAFT' && !isViewer && (
-                                            <button
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/newsletters/${Order.order_id}/send`
-                                                    )
-                                                }
-                                                className="bg-green-500 text-white px-3 py-2 rounded-lg"
-                                            >
-                                                <Send size={16} />
-                                                <span> Send </span>
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {Order.length === 0 && (
-                            <div className="text-center py-12 bg-white rounded-xl">
-                                No newsletters created yet.
-                            </div>
-                        )}
-                    </div>
+                {!isViewer && order.status === 'UPDATE_REQUESTED' && (
+                  <button
+                    onClick={() => sendUpdate(order.order_id)}
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  >
+                    <Send size={16} />
+                    Send Update
+                  </button>
                 )}
-
-                {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <div className="bg-white rounded-xl p-6 w-full max-w-xl">
-                            <h2 className="text-xl font-bold mb-4">Create Newsletter</h2>
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <input
-                                    placeholder="Newsletter Name"
-                                    value={formData.name}
-                                    onChange={e =>
-                                        setFormData({ ...formData, name: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                    required
-                                />
-
-                                <input
-                                    placeholder="City Filter (optional)"
-                                    value={formData.city_filter}
-                                    onChange={e =>
-                                        setFormData({ ...formData, city_filter: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                />
-
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 border rounded py-2"
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        className="flex-1 bg-pink-600 text-white rounded py-2"
-                                    >
-                                        Save as Draft
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </Layout>
-    );
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
 }
+
 
 

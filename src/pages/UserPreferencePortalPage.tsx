@@ -35,12 +35,20 @@ type Newsletter = {
   status: 'DRAFT' | 'SENT';
 };
 
-type PreferenceToggleKey = keyof UserPreference;
+type OrderStatus = 'PLACED' | 'UPDATE_REQUESTED' | 'SENT';
+
+type Order = {
+  order_id: string;
+  order_name: string;
+  status: OrderStatus;
+};
 
 export function UserPreferenceSettingsPage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderName, setOrderName] = useState('');
   const [preferences, setPreferences] = useState<UserPreference | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
@@ -66,10 +74,14 @@ export function UserPreferenceSettingsPage() {
 
       const campRes = await fetch(`http://localhost:9100/campaigns`);
       const campData: Campaign[] = campRes.ok ? await campRes.json() : [];
-      console.log(campData)
-      console.log(prefData)
+
       const newsRes = await fetch(`http://localhost:9100/newsletters`);
       const newsData: Newsletter[] = newsRes.ok ? await newsRes.json() : [];
+
+      const orderRes = await fetch(`http://localhost:9100/users/${userId}/orders`);
+      const orderData: Order[] = orderRes.ok ? await orderRes.json() : [];
+
+      setOrders(orderData);
 
       if (prefData.offers) {
         setCampaigns(
@@ -96,6 +108,39 @@ export function UserPreferenceSettingsPage() {
       setLoading(false);
     }
   };
+
+  const createOrder = async () => {
+    if (!userId || !orderName.trim()) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:9100/users/${userId}/orders`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_name: orderName,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error();
+
+      const newOrder: Order = await res.json();
+
+      setOrders(prev => [newOrder, ...prev]);
+      setOrderName('');
+      setShowOrderModal(false);
+    } catch {
+      alert('Failed to create order');
+    }
+  };
+
+
+  type PreferenceToggleKey =
+    | 'offers'
+    | 'order_updates'
+    | 'newsletter'
 
   const toggle = (key: PreferenceToggleKey) => {
     if (!preferences) return;
@@ -125,6 +170,27 @@ export function UserPreferenceSettingsPage() {
       setSaving(false);
     }
   };
+  const requestOrderUpdate = async (orderId: string) => {
+    try {
+      await fetch(
+        `http://localhost:9100/users/${userId}/orders/${orderId}/request-update`,
+        { method: 'POST' }
+      );
+
+      setOrders(prev =>
+        prev.map(order =>
+          order.order_id === orderId
+            ? { ...order, status: 'UPDATE_REQUESTED' }
+            : order
+        )
+      );
+
+      setMessage('Update requested');
+    } catch {
+      setMessage('Failed to request update');
+    }
+  };
+
 
   const ChannelBadge = ({
     active,
@@ -136,9 +202,8 @@ export function UserPreferenceSettingsPage() {
     label: string;
   }) => (
     <div
-      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-        active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
-      }`}
+      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
+        }`}
     >
       <Icon size={14} />
       {label}
@@ -242,6 +307,59 @@ export function UserPreferenceSettingsPage() {
           </section>
         )}
 
+        {/* ================= ORDERS ================= */}
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Your Orders</h2>
+
+            <button
+              onClick={() => setShowOrderModal(true)}
+              className="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm hover:bg-pink-700"
+            >
+              Create Order
+            </button>
+
+
+          </div>
+
+          {orders.length === 0 ? (
+            <p className="text-gray-600">You have no orders.</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map(order => (
+                <div
+                  key={order.order_id}
+                  className="bg-white rounded-xl shadow p-4 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold">{order.order_name}</p>
+                    <p className="text-sm text-gray-500">
+                      Status: {order.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => requestOrderUpdate(order.order_id)}
+                    disabled={order.status !== 'PLACED'}
+                    className={`px-4 py-2 rounded-lg text-sm text-white
+    ${order.status === 'PLACED'
+                        ? 'bg-pink-600 hover:bg-pink-700'
+                        : 'bg-gray-300 cursor-not-allowed'
+                      }`}
+                  >
+                    {order.status === 'UPDATE_REQUESTED'
+                      ? 'Requested'
+                      : order.status === 'SENT'
+                        ? 'Sent'
+                        : 'Request Update'}
+                  </button>
+
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* ================= PREFERENCES (UNCHANGED) ================= */}
         <section className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <h2 className="text-xl font-bold">Notification Preferences</h2>
@@ -256,11 +374,10 @@ export function UserPreferenceSettingsPage() {
                 <span>{label}</span>
                 <button
                   onClick={() => toggle(key as PreferenceToggleKey)}
-                  className={`h-6 w-11 rounded-full ${
-                    preferences[key as PreferenceToggleKey]
-                      ? 'bg-pink-600'
-                      : 'bg-gray-300'
-                  }`}
+                  className={`h-6 w-11 rounded-full ${preferences[key as PreferenceToggleKey]
+                    ? 'bg-pink-600'
+                    : 'bg-gray-300'
+                    }`}
                 />
               </div>
             ))}
@@ -268,11 +385,10 @@ export function UserPreferenceSettingsPage() {
 
           {message && (
             <div
-              className={`text-sm text-center p-3 rounded-lg ${
-                message.includes('success')
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-red-50 text-red-600'
-              }`}
+              className={`text-sm text-center p-3 rounded-lg ${message.includes('success')
+                ? 'bg-green-50 text-green-600'
+                : 'bg-red-50 text-red-600'
+                }`}
             >
               {message}
             </div>
@@ -290,6 +406,38 @@ export function UserPreferenceSettingsPage() {
           </button>
         </section>
       </div>
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Create Order</h2>
+
+            <input
+              type="text"
+              placeholder="Enter order name"
+              value={orderName}
+              onChange={e => setOrderName(e.target.value)}
+              className="w-full border rounded px-3 py-2 mb-4"
+              required
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={createOrder}
+                className="px-4 py-2 bg-pink-600 text-white rounded"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

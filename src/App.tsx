@@ -21,6 +21,7 @@ import { NewsletterManagementPage } from './pages/NewsletterManagementPage';
 import { NewsletterPreviewPage } from './pages/NewsletterPreviewPage';
 import { NewsletterSendPage } from './pages/NewsletterSendPage';
 import { NewsletterRecipientsPage } from './pages/NewsletterRecipientsPage';
+import { OrderManagementPage } from './pages/OrdersManagementPage';
 
 function EmployeeRedirect() {
   const { user } = useAuth();
@@ -147,6 +148,14 @@ function AppRoutes() {
         }
       />
 
+      <Route
+        path="/orders"
+        element={
+          <RoleRoute allow={[1, 2, 3]}>
+            <OrderManagementPage />
+          </RoleRoute>
+        }
+      />
       {/* Logs */}
       <Route
         path="/logs"
