@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Save } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Mail,
+  MessageSquare,
+  Bell,
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-type PreferenceToggleKey = keyof Pick<
-  UserPreference,
-  | 'offers'
-  | 'order_updates'
-  | 'newsletter'
-  | 'email_channel'
-  | 'sms_channel'
-  | 'push_channel'
->;
-
 type UserPreference = {
-  id: string;
   user_id: string;
+  city: string | null;
   offers: boolean;
   order_updates: boolean;
   newsletter: boolean;
@@ -23,61 +19,102 @@ type UserPreference = {
   push_channel: boolean;
 };
 
-type ToggleRowProps = {
-  label: string;
-  field: PreferenceToggleKey;
+type Campaign = {
+  campaign_id: string;
+  campaign_name: string;
+  content: string;
+  city_filter: string | null;
+  status: 'DRAFT' | 'SENT';
 };
+
+type Newsletter = {
+  newsletter_id: string;
+  news_name: string;
+  content: string;
+  city_filter: string | null;
+  status: 'DRAFT' | 'SENT';
+};
+
+type PreferenceToggleKey = keyof UserPreference;
 
 export function UserPreferenceSettingsPage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
 
   const [preferences, setPreferences] = useState<UserPreference | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!userId) return;
-    fetchPreferences();
+    fetchData();
   }, [userId]);
 
-  const fetchPreferences = async () => {
-    if (!userId) return;
-    setLoading(true);
-
+  const fetchData = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:9100/users/${userId}/preferences`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      // 1️⃣ Preferences (single source of truth)
+      const prefRes = await fetch(
+        `http://localhost:9100/users/${userId}/preferences`
       );
+      if (!prefRes.ok) throw new Error('Preferences fetch failed');
 
-      if (!res.ok) {
-        throw new Error('Failed to fetch preferences');
+      const prefData: UserPreference = await prefRes.json();
+      setPreferences(prefData);
+
+      // 2️⃣ Campaigns
+      const campRes = await fetch(`http://localhost:9100/campaigns`);
+      const campData: Campaign[] = campRes.ok ? await campRes.json() : [];
+
+      // 3️⃣ Newsletters
+      const newsRes = await fetch(`http://localhost:9100/newsletters`);
+      const newsData: Newsletter[] = newsRes.ok ? await newsRes.json() : [];
+
+      // 4️⃣ Filter campaigns
+      if (prefData.offers) {
+        const filteredCampaigns = campData.filter(c => {
+          if (c.status !== 'SENT') return false;
+          if (!c.city_filter) return true;
+          if (!prefData.city) return false;
+          return (
+            c.city_filter.toLowerCase() ===
+            prefData.city.toLowerCase()
+          );
+        });
+        setCampaigns(filteredCampaigns);
+      } else {
+        setCampaigns([]);
       }
 
-      const data = await res.json();
-      setPreferences(data);
+      // 5️⃣ Filter newsletters (SAME LOGIC)
+      if (prefData.newsletter) {
+        const filteredNewsletters = newsData.filter(n => {
+          if (n.status !== 'SENT') return false;
+          if (!n.city_filter) return true;
+          if (!prefData.city) return false;
+          return (
+            n.city_filter.toLowerCase() ===
+            prefData.city.toLowerCase()
+          );
+        });
+        setNewsletters(filteredNewsletters);
+      } else {
+        setNewsletters([]);
+      }
     } catch (err) {
-      console.error('Error fetching preferences:', err);
+      console.error(err);
+      setCampaigns([]);
+      setNewsletters([]);
     } finally {
       setLoading(false);
     }
   };
 
-
-
   const toggle = (key: PreferenceToggleKey) => {
     if (!preferences) return;
-    setPreferences({
-      ...preferences,
-      [key]: !preferences[key],
-    });
+    setPreferences({ ...preferences, [key]: !preferences[key] });
   };
 
   const handleSave = async () => {
@@ -91,48 +128,43 @@ export function UserPreferenceSettingsPage() {
         `http://localhost:9100/users/${userId}/preferences`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            offers: preferences.offers,
-            order_updates: preferences.order_updates,
-            newsletter: preferences.newsletter,
-            email_channel: preferences.email_channel,
-            sms_channel: preferences.sms_channel,
-            push_channel: preferences.push_channel,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(preferences),
         }
       );
 
-      if (!res.ok) {
-        throw new Error('Save failed');
-      }
-
+      if (!res.ok) throw new Error();
       setMessage('Preferences saved successfully');
-    } catch (err) {
+    } catch {
       setMessage('Failed to save preferences');
     } finally {
       setSaving(false);
     }
   };
 
-
-  const ToggleRow = ({ label, field }: ToggleRowProps) => (
-    <div className="flex justify-between items-center py-3 border-b">
-      <span>{label}</span>
-      <button
-        onClick={() => toggle(field)}
-        className={`h-6 w-11 rounded-full transition-colors ${preferences?.[field] ? 'bg-[#FF1774]' : 'bg-gray-300'
-          }`}
-      />
+  const ChannelBadge = ({
+    active,
+    icon: Icon,
+    label,
+  }: {
+    active: boolean;
+    icon: any;
+    label: string;
+  }) => (
+    <div
+      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+        active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
+      }`}
+    >
+      <Icon size={14} />
+      {label}
     </div>
   );
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF1774]" />
+        <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-pink-600" />
       </div>
     );
   }
@@ -140,162 +172,130 @@ export function UserPreferenceSettingsPage() {
   if (!preferences) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Preferences not found.
+        Preferences not found
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white p-4">
-      <div className="max-w-4xl mx-auto py-8">
+      <div className="max-w-5xl mx-auto py-8 space-y-10">
         <button
           onClick={() => navigate('/login')}
-          className="mb-6 flex items-center text-pink-600"
+          className="flex items-center text-pink-600"
         >
           <ArrowLeft size={18} />
-          <span className="ml-2">Back to Login</span>
+          <span className="ml-2">Back</span>
         </button>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <div className="text-center mb-6">
-            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
-            <h2 className="text-2xl font-bold">Notification Preferences</h2>
-            <p className="text-gray-600 mt-2">Choose how you want to receive notifications</p>
-          </div>
+        {/* ================= CAMPAIGNS ================= */}
+        {preferences.offers && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">
+              Campaigns Available for You
+            </h2>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="text-left p-4 font-semibold text-gray-700">Notification Type</th>
-                  <th className="text-center p-4 font-semibold text-gray-700">Email</th>
-                  <th className="text-center p-4 font-semibold text-gray-700">SMS</th>
-                  <th className="text-center p-4 font-semibold text-gray-700">Push</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Offers</td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('email_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.offers && preferences?.email_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('sms_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.offers && preferences?.sms_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('push_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.offers && preferences?.push_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                </tr>
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Order Updates</td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('email_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.order_updates && preferences?.email_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('sms_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.order_updates && preferences?.sms_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('push_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.order_updates && preferences?.push_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                </tr>
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Newsletter</td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('email_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.newsletter && preferences?.email_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('sms_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.newsletter && preferences?.sms_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => toggle('push_channel')}
-                      className={`h-6 w-11 rounded-full transition-colors ${
-                        preferences?.newsletter && preferences?.push_channel ? 'bg-[#FF1774]' : 'bg-gray-300'
-                      }`}
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            {campaigns.length === 0 ? (
+              <p className="text-gray-600">
+                No campaigns available for your city.
+              </p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                {campaigns.map(c => (
+                  <div
+                    key={c.campaign_id}
+                    className="bg-white rounded-2xl shadow-lg p-6"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-semibold text-pink-600">
+                        {c.campaign_name}
+                      </h3>
 
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-semibold mb-3">Enable/Disable Notification Types</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span>Receive Offers</span>
+                      <div className="flex gap-2">
+                        <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
+                        <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
+                        <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600">{c.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ================= NEWSLETTERS ================= */}
+        {preferences.newsletter && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">
+              Newsletters Available for You
+            </h2>
+
+            {newsletters.length === 0 ? (
+              <p className="text-gray-600">
+                No newsletters available for your city.
+              </p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                {newsletters.map(n => (
+                  <div
+                    key={n.newsletter_id}
+                    className="bg-white rounded-2xl shadow-lg p-6"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-semibold text-pink-600">
+                        {n.news_name}
+                      </h3>
+
+                      <div className="flex gap-2">
+                        <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
+                        <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
+                        <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600">{n.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ================= PREFERENCES (UNCHANGED) ================= */}
+        <section className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+          <h2 className="text-xl font-bold">Notification Preferences</h2>
+
+          <div className="space-y-3">
+            {[
+              ['Receive Offers', 'offers'],
+              ['Receive Order Updates', 'order_updates'],
+              ['Receive Newsletter', 'newsletter'],
+            ].map(([label, key]) => (
+              <div key={key} className="flex justify-between items-center">
+                <span>{label}</span>
                 <button
-                  onClick={() => toggle('offers')}
-                  className={`h-6 w-11 rounded-full transition-colors ${
-                    preferences?.offers ? 'bg-[#FF1774]' : 'bg-gray-300'
+                  onClick={() => toggle(key as PreferenceToggleKey)}
+                  className={`h-6 w-11 rounded-full ${
+                    preferences[key as PreferenceToggleKey]
+                      ? 'bg-pink-600'
+                      : 'bg-gray-300'
                   }`}
                 />
               </div>
-              <div className="flex justify-between items-center">
-                <span>Receive Order Updates</span>
-                <button
-                  onClick={() => toggle('order_updates')}
-                  className={`h-6 w-11 rounded-full transition-colors ${
-                    preferences?.order_updates ? 'bg-[#FF1774]' : 'bg-gray-300'
-                  }`}
-                />
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Receive Newsletter</span>
-                <button
-                  onClick={() => toggle('newsletter')}
-                  className={`h-6 w-11 rounded-full transition-colors ${
-                    preferences?.newsletter ? 'bg-[#FF1774]' : 'bg-gray-300'
-                  }`}
-                />
-              </div>
-            </div>
+            ))}
           </div>
 
           {message && (
-            <div className={`text-sm text-center p-3 rounded-lg ${
-              message.includes('success') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-            }`}>
+            <div
+              className={`text-sm text-center p-3 rounded-lg ${
+                message.includes('success')
+                  ? 'bg-green-50 text-green-600'
+                  : 'bg-red-50 text-red-600'
+              }`}
+            >
               {message}
             </div>
           )}
@@ -303,13 +303,16 @@ export function UserPreferenceSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-[#FF1774] text-white py-3 rounded-lg flex justify-center items-center gap-2 disabled:opacity-50 hover:bg-[#e01569] transition-colors"
+            className="w-full bg-pink-600 text-white py-3 rounded-lg
+                       flex justify-center items-center gap-2
+                       hover:bg-pink-700 disabled:opacity-50"
           >
             <Save size={18} />
             {saving ? 'Saving...' : 'Save Preferences'}
           </button>
-        </div>
+        </section>
       </div>
     </div>
   );
 }
+

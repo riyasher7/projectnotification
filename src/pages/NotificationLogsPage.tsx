@@ -3,9 +3,6 @@ import { Filter } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 
-/* =======================
-   Types
-======================= */
 
 type Campaign = {
   campaign_id: string;
@@ -67,20 +64,13 @@ export function NotificationLogsPage() {
     setLoading(true);
     try {
       let query = supabase
-        .from('campaign_logs')
+        .from('notification_logs')
         .select(`
         log_id,
         status,
         sent_at,
-        campaign_id,
+        notification_type,
         user_id,
-        campaigns (
-          campaign_name
-        ),
-        users (
-          name,
-          email
-        )
       `)
         .order('sent_at', { ascending: false });
 

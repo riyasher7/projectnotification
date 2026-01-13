@@ -5,242 +5,270 @@ import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
 export type Newsletter = {
-    newsletter_id: string;
-    news_name: string;
-    city_filter: string | null;
-    content: string;
-    status: 'DRAFT' | 'SENT';
-    created_at: string;
-    created_by: string;
-
+  newsletter_id: string;
+  news_name: string;
+  city_filter: string | null;
+  content: string;
+  status: 'DRAFT' | 'SENT';
+  created_at: string;
+  created_by: string;
 };
 
 export function NewsletterManagementPage() {
-    const navigate = useNavigate();
-    const { user, isViewer } = useAuth();
+  const navigate = useNavigate();
+  const { user, isViewer } = useAuth();
 
-    const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+  const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
-    const [formData, setFormData] = useState({
-        name: '',
-        city_filter: '',
-        content: '',
-    });
+  const [formData, setFormData] = useState({
+    name: '',
+    city_filter: '',
+    content: '',
+  });
 
-    useEffect(() => {
-        fetchNewsletters();
-    }, []);
+  useEffect(() => {
+    fetchNewsletters();
+  }, []);
 
-    const fetchNewsletters = async () => {
-        try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/newsletters`
-            );
+  const fetchNewsletters = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/newsletters`
+      );
 
-            if (!res.ok) throw new Error('Failed to fetch newsletters');
+      if (!res.ok) throw new Error('Failed to fetch newsletters');
 
-            const data: Newsletter[] = await res.json();
-            setNewsletter(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+      const data: Newsletter[] = await res.json();
+      setNewsletters(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.user_id) {
+      alert('User not authenticated');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/newsletters`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            news_name: formData.name,
+            city_filter: formData.city_filter || null,
+            content: formData.content,
+            created_by: user.user_id,
+          }),
         }
-    };
+      );
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+      if (!response.ok) throw new Error('Failed to create newsletter');
 
-        if (!user?.user_id) {
-            alert('User not authenticated');
-            return;
-        }
+      setShowModal(false);
+      setFormData({ name: '', city_filter: '', content: '' });
+      fetchNewsletters();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to create newsletter');
+    }
+  };
 
-        try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/newsletters`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        news_name: formData.name,
-                        city_filter: formData.city_filter || null,
-                        content: formData.content,
-                        created_by: user.user_id,
-                    }),
-                }
-            );
+  return (
+    <Layout>
+      <div className="px-4">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Newsletter Management
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Create and manage your newsletters
+            </p>
+          </div>
 
-            if (!response.ok) throw new Error('Failed to create newsletter');
+          {!isViewer && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-pink-600 hover:bg-pink-700 text-white
+                         px-5 py-2.5 rounded-lg
+                         flex items-center space-x-2 transition"
+            >
+              <Plus size={18} />
+              <span>New Newsletter</span>
+            </button>
+          )}
+        </div>
 
-            setShowModal(false);
-            setFormData({ name: '', city_filter: '', content: '' });
-            fetchNewsletters();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to create newsletter');
-        }
-    };
+        {/* Content */}
+        {loading ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : (
+          <div className="space-y-8">
+            {newsletters.map(newsletter => (
+              <div
+                key={newsletter.newsletter_id}
+                className="bg-white rounded-xl shadow-lg p-8"
+              >
+                <div className="flex justify-between items-start">
+                  {/* Left */}
+                  <div>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <h3 className="text-xl font-bold text-pink-600">
+                        {newsletter.news_name}
+                      </h3>
 
-
-    return (
-        <Layout>
-            <div className="px-4">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">
-                            Newsletter Management
-                        </h1>
-                        <p className="text-gray-600 mt-2">
-                            Create and manage newsletters
-                        </p>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium
+                          ${
+                            newsletter.status === 'DRAFT'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                      >
+                        {newsletter.status}
+                      </span>
                     </div>
 
-                    {!isViewer && (
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                        >
-                            <Plus size={20} />
-                            <span>New Newsletter</span>
-                        </button>
+                    <div className="space-y-2 text-gray-700 text-sm">
+                      <p>
+                        <span className="font-semibold">Content:</span>{' '}
+                        {newsletter.content}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">Created:</span>{' '}
+                        {new Date(
+                          newsletter.created_at
+                        ).toLocaleDateString()}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">Sent:</span>{' '}
+                        {new Date(
+                          newsletter.created_at
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right */}
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/newsletters/${newsletter.newsletter_id}/preview`
+                        )
+                      }
+                      className="flex items-center space-x-2
+                                 bg-blue-500 hover:bg-blue-600
+                                 text-white px-5 py-2.5 rounded-lg transition"
+                    >
+                      <Eye size={18} />
+                      <span>Preview</span>
+                    </button>
+
+                    {newsletter.status === 'DRAFT' && !isViewer && (
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/newsletters/${newsletter.newsletter_id}/send`
+                          )
+                        }
+                        className="flex items-center space-x-2
+                                   bg-green-500 hover:bg-green-600
+                                   text-white px-5 py-2.5 rounded-lg transition"
+                      >
+                        <Send size={18} />
+                        <span>Send</span>
+                      </button>
                     )}
+                  </div>
                 </div>
+              </div>
+            ))}
 
-                {loading ? (
-                    <div className="text-center py-12">Loading...</div>
-                ) : (
-                    <div className="grid gap-6">
-                        {newsletter.map(newsletter => (
-                            <div
-                                key={newsletter.newsletter_id}
-                                className="bg-white rounded-xl shadow p-6"
-                            >
-                                <div className="flex justify-between">
-                                    <div>
-                                        <h3 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                                            {newsletter.news_name}
-                                        </h3>
+            {newsletters.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl shadow-lg">
+                No newsletters yet.
+              </div>
+            )}
+          </div>
+        )}
 
-                                        <p className="text-sm mt-2">
-                                            <b>Status:</b> {newsletter.status}
-                                        </p>
+        {/* Create Modal (unchanged except spacing consistency) */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6">
+              <h2 className="text-2xl font-bold mb-6">
+                Create New Newsletter
+              </h2>
 
-                                        {newsletter.city_filter && (
-                                            <p className="text-sm">
-                                                <b>City:</b> {newsletter.city_filter}
-                                            </p>
-                                        )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  placeholder="Newsletter Name"
+                  value={formData.name}
+                  onChange={e =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
 
-                                        <p className="text-sm">
-                                            <b>Content:</b> {newsletter.content}
-                                        </p>
+                <input
+                  placeholder="City Filter (optional)"
+                  value={formData.city_filter}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      city_filter: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
 
-                                        <p className="text-sm">
-                                            <b>Created:</b>{' '}
-                                            {new Date(newsletter.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
+                <textarea
+                  placeholder="Newsletter Content"
+                  value={formData.content}
+                  onChange={e =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
 
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() =>
-                                                navigate(
-                                                    `/newsletters/${newsletter.newsletter_id}/preview`
-                                                )
-                                            }
-                                            className="bg-blue-500 text-white px-3 py-2 rounded-lg"
-                                        >
-                                            <Eye size={16} />
-                                        </button>
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 border rounded-lg py-2"
+                  >
+                    Cancel
+                  </button>
 
-                                        {newsletter.status === 'DRAFT' && !isViewer && (
-                                            <button
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/newsletters/${newsletter.newsletter_id}/send`
-                                                    )
-                                                }
-                                                className="bg-green-500 text-white px-3 py-2 rounded-lg"
-                                            >
-                                                <Send size={16} />
-                                                <span> Send </span>
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {newsletter.length === 0 && (
-                            <div className="text-center py-12 bg-white rounded-xl">
-                                No newsletters created yet.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <div className="bg-white rounded-xl p-6 w-full max-w-xl">
-                            <h2 className="text-xl font-bold mb-4">Create Newsletter</h2>
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <input
-                                    placeholder="Newsletter Name"
-                                    value={formData.name}
-                                    onChange={e =>
-                                        setFormData({ ...formData, name: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                    required
-                                />
-
-                                <input
-                                    placeholder="City Filter (optional)"
-                                    value={formData.city_filter}
-                                    onChange={e =>
-                                        setFormData({ ...formData, city_filter: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                />
-
-                                <textarea
-                                    placeholder="Newsletter Content"
-                                    value={formData.content}
-                                    onChange={e =>
-                                        setFormData({ ...formData, content: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                    rows={4}
-                                    required
-                                />
-
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 border rounded py-2"
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        className="flex-1 bg-pink-600 text-white rounded py-2"
-                                    >
-                                        Save as Draft
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                  <button
+                    type="submit"
+                    className="flex-1 bg-pink-600 text-white rounded-lg py-2"
+                  >
+                    Save as Draft
+                  </button>
+                </div>
+              </form>
             </div>
-        </Layout>
-    );
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
 }
-
-

@@ -9,7 +9,7 @@ export type Newsletter = {
     newsletter_name: string;
     city_filter: string | null;
     content: string;
-    status: 'draft' | 'sent';
+    status: 'DRAFT' | 'SENT';
     created_at: string;
     created_by: string;
 };
@@ -82,9 +82,9 @@ export function NewsletterPreviewPage() {
                                 <div>
                                     <p className="text-sm text-gray-600">Status</p>
                                     <span
-                                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${newsletter.status === 'sent'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${newsletter.status === 'SENT'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                             }`}
                                     >
                                         {newsletter.status}
@@ -121,17 +121,19 @@ export function NewsletterPreviewPage() {
                         </div>
 
                         {/* Send / Recipients */}
-                        {newsletter.status === 'draft' && (
+                        {newsletter.status === 'DRAFT' && (
                             <div className="bg-white rounded-xl shadow-lg p-6">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                    Eligible Recipients
+                                </h2>
+
                                 <button
                                     onClick={() =>
-                                        navigate(
-                                            `/newsletters/${newsletter.newsletter_id}/send`
-                                        )
+                                        navigate(`/newsletters/${newsletter.newsletter_id}/recipients`)
                                     }
-                                    className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg font-medium"
+                                    className="bg-[#FF1774] hover:bg-[#FF1774] text-white px-6 py-3 rounded-lg font-medium"
                                 >
-                                    Send Newsletter
+                                    View Recipients
                                 </button>
                             </div>
                         )}
