@@ -11,7 +11,7 @@ export type Campaign = {
   city_filter: string | null;
   content: string;
   created_by: string;
-  status: 'draft' | 'sent';
+  status: 'DRAFT' | 'SENT';
   created_at: string;
 };
 
@@ -55,6 +55,7 @@ export function CampaignManagementPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
@@ -62,10 +63,10 @@ export function CampaignManagementPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            campaign_name: formData.name,             
+            campaign_name: formData.name,
             city_filter: formData.city_filter || null,
             content: formData.content,
-            created_by: user?.user_id,           
+            created_by: user?.user_id,
           }),
         }
       );
@@ -94,8 +95,6 @@ export function CampaignManagementPage() {
   const getNotificationTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       promotional_offers: 'Promotional Offers',
-      order_updates: 'Order Updates',
-      newsletter: 'Newsletter',
     };
     return labels[type] || type;
   };
@@ -144,7 +143,7 @@ export function CampaignManagementPage() {
                         {campaign.campaign_name}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'sent'
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'SENT'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                           }`}
@@ -204,7 +203,7 @@ export function CampaignManagementPage() {
                       <span>Preview</span>
                     </button>
 
-                    {campaign.status === 'draft' && !isViewer && (
+                    {campaign.status === 'DRAFT' && !isViewer && (
                       <button
                         onClick={() =>
                           navigate(`/campaigns/${campaign.campaign_id}/send`)
@@ -264,7 +263,6 @@ export function CampaignManagementPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                   />
                 </div>
-
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

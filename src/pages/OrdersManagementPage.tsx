@@ -4,11 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
-export type Newsletter = {
-    newsletter_id: string;
-    news_name: string;
+export type Order = {
+    order_id: string;
+    order_name: string;
     city_filter: string | null;
-    content: string;
     status: 'DRAFT' | 'SENT';
     created_at: string;
     created_by: string;
@@ -19,30 +18,29 @@ export function NewsletterManagementPage() {
     const navigate = useNavigate();
     const { user, isViewer } = useAuth();
 
-    const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
+    const [Order, setOrder] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
         city_filter: '',
-        content: '',
     });
 
     useEffect(() => {
-        fetchNewsletters();
+        fetchOrders();
     }, []);
 
-    const fetchNewsletters = async () => {
+    const fetchOrders = async () => {
         try {
             const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/newsletters`
+                `${import.meta.env.VITE_API_BASE_URL}/orders`
             );
 
             if (!res.ok) throw new Error('Failed to fetch newsletters');
 
-            const data: Newsletter[] = await res.json();
-            setNewsletter(data);
+            const data: Order[] = await res.json();
+            setOrder(data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -60,14 +58,13 @@ export function NewsletterManagementPage() {
 
         try {
             const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/newsletters`,
+                `${import.meta.env.VITE_API_BASE_URL}/orders`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         news_name: formData.name,
                         city_filter: formData.city_filter || null,
-                        content: formData.content,
                         created_by: user.user_id,
                     }),
                 }
@@ -76,8 +73,8 @@ export function NewsletterManagementPage() {
             if (!response.ok) throw new Error('Failed to create newsletter');
 
             setShowModal(false);
-            setFormData({ name: '', city_filter: '', content: '' });
-            fetchNewsletters();
+            setFormData({ name: '', city_filter: ''});
+            fetchOrders();
         } catch (error) {
             console.error(error);
             alert('Failed to create newsletter');
@@ -113,34 +110,29 @@ export function NewsletterManagementPage() {
                     <div className="text-center py-12">Loading...</div>
                 ) : (
                     <div className="grid gap-6">
-                        {newsletter.map(newsletter => (
+                        {Order.map(Order => (
                             <div
-                                key={newsletter.newsletter_id}
+                                key={Order.order_id}
                                 className="bg-white rounded-xl shadow p-6"
                             >
                                 <div className="flex justify-between">
                                     <div>
                                         <h3 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                                            {newsletter.news_name}
+                                            {Order.order_name}
                                         </h3>
 
                                         <p className="text-sm mt-2">
-                                            <b>Status:</b> {newsletter.status}
+                                            <b>Status:</b> {Order.status}
                                         </p>
 
-                                        {newsletter.city_filter && (
+                                        {Order.city_filter && (
                                             <p className="text-sm">
-                                                <b>City:</b> {newsletter.city_filter}
+                                                <b>City:</b> {Order.city_filter}
                                             </p>
                                         )}
-
-                                        <p className="text-sm">
-                                            <b>Content:</b> {newsletter.content}
-                                        </p>
-
                                         <p className="text-sm">
                                             <b>Created:</b>{' '}
-                                            {new Date(newsletter.created_at).toLocaleDateString()}
+                                            {new Date(Order.created_at).toLocaleDateString()}
                                         </p>
                                     </div>
 
@@ -148,7 +140,7 @@ export function NewsletterManagementPage() {
                                         <button
                                             onClick={() =>
                                                 navigate(
-                                                    `/newsletters/${newsletter.newsletter_id}/preview`
+                                                    `/newsletters/${Order.order_id}/preview`
                                                 )
                                             }
                                             className="bg-blue-500 text-white px-3 py-2 rounded-lg"
@@ -156,11 +148,11 @@ export function NewsletterManagementPage() {
                                             <Eye size={16} />
                                         </button>
 
-                                        {newsletter.status === 'DRAFT' && !isViewer && (
+                                        {Order.status === 'DRAFT' && !isViewer && (
                                             <button
                                                 onClick={() =>
                                                     navigate(
-                                                        `/newsletters/${newsletter.newsletter_id}/send`
+                                                        `/newsletters/${Order.order_id}/send`
                                                     )
                                                 }
                                                 className="bg-green-500 text-white px-3 py-2 rounded-lg"
@@ -174,7 +166,7 @@ export function NewsletterManagementPage() {
                             </div>
                         ))}
 
-                        {newsletter.length === 0 && (
+                        {Order.length === 0 && (
                             <div className="text-center py-12 bg-white rounded-xl">
                                 No newsletters created yet.
                             </div>
@@ -205,17 +197,6 @@ export function NewsletterManagementPage() {
                                         setFormData({ ...formData, city_filter: e.target.value })
                                     }
                                     className="w-full border px-3 py-2 rounded"
-                                />
-
-                                <textarea
-                                    placeholder="Newsletter Content"
-                                    value={formData.content}
-                                    onChange={e =>
-                                        setFormData({ ...formData, content: e.target.value })
-                                    }
-                                    className="w-full border px-3 py-2 rounded"
-                                    rows={4}
-                                    required
                                 />
 
                                 <div className="flex gap-3">
