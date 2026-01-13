@@ -55,58 +55,43 @@ export function UserPreferenceSettingsPage() {
 
   const fetchData = async () => {
     try {
-      // 1️⃣ Preferences (single source of truth)
       const prefRes = await fetch(
         `http://localhost:9100/users/${userId}/preferences`
       );
-      if (!prefRes.ok) throw new Error('Preferences fetch failed');
+      console.log(userId)
+      if (!prefRes.ok) throw new Error();
 
       const prefData: UserPreference = await prefRes.json();
       setPreferences(prefData);
 
-      // 2️⃣ Campaigns
       const campRes = await fetch(`http://localhost:9100/campaigns`);
       const campData: Campaign[] = campRes.ok ? await campRes.json() : [];
-
-      // 3️⃣ Newsletters
+      console.log(campData)
+      console.log(prefData)
       const newsRes = await fetch(`http://localhost:9100/newsletters`);
       const newsData: Newsletter[] = newsRes.ok ? await newsRes.json() : [];
 
-      // 4️⃣ Filter campaigns
       if (prefData.offers) {
-        const filteredCampaigns = campData.filter(c => {
-          if (c.status !== 'SENT') return false;
-          if (!c.city_filter) return true;
-          if (!prefData.city) return false;
-          return (
-            c.city_filter.toLowerCase() ===
-            prefData.city.toLowerCase()
-          );
-        });
-        setCampaigns(filteredCampaigns);
-      } else {
-        setCampaigns([]);
+        setCampaigns(
+          campData.filter(c =>
+            c.status === 'SENT' &&
+            (!c.city_filter ||
+              c.city_filter.toLowerCase() === prefData.city?.toLowerCase())
+          )
+        );
       }
 
-      // 5️⃣ Filter newsletters (SAME LOGIC)
       if (prefData.newsletter) {
-        const filteredNewsletters = newsData.filter(n => {
-          if (n.status !== 'SENT') return false;
-          if (!n.city_filter) return true;
-          if (!prefData.city) return false;
-          return (
-            n.city_filter.toLowerCase() ===
-            prefData.city.toLowerCase()
-          );
-        });
-        setNewsletters(filteredNewsletters);
-      } else {
-        setNewsletters([]);
+        setNewsletters(
+          newsData.filter(n =>
+            n.status === 'SENT' &&
+            (!n.city_filter ||
+              n.city_filter.toLowerCase() === prefData.city?.toLowerCase())
+          )
+        );
       }
     } catch (err) {
       console.error(err);
-      setCampaigns([]);
-      setNewsletters([]);
     } finally {
       setLoading(false);
     }
@@ -132,7 +117,6 @@ export function UserPreferenceSettingsPage() {
           body: JSON.stringify(preferences),
         }
       );
-
       if (!res.ok) throw new Error();
       setMessage('Preferences saved successfully');
     } catch {
@@ -170,11 +154,7 @@ export function UserPreferenceSettingsPage() {
   }
 
   if (!preferences) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Preferences not found
-      </div>
-    );
+    return <div className="text-center">Preferences not found</div>;
   }
 
   return (
@@ -191,9 +171,17 @@ export function UserPreferenceSettingsPage() {
         {/* ================= CAMPAIGNS ================= */}
         {preferences.offers && (
           <section>
-            <h2 className="text-2xl font-bold mb-4">
-              Campaigns Available for You
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">
+                Campaigns Available for You
+              </h2>
+
+              <div className="flex gap-2">
+                <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
+                <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
+                <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+              </div>
+            </div>
 
             {campaigns.length === 0 ? (
               <p className="text-gray-600">
@@ -206,18 +194,9 @@ export function UserPreferenceSettingsPage() {
                     key={c.campaign_id}
                     className="bg-white rounded-2xl shadow-lg p-6"
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold text-pink-600">
-                        {c.campaign_name}
-                      </h3>
-
-                      <div className="flex gap-2">
-                        <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
-                        <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
-                        <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
-                      </div>
-                    </div>
-
+                    <h3 className="text-xl font-semibold text-pink-600 mb-2">
+                      {c.campaign_name}
+                    </h3>
                     <p className="text-gray-600">{c.content}</p>
                   </div>
                 ))}
@@ -229,9 +208,17 @@ export function UserPreferenceSettingsPage() {
         {/* ================= NEWSLETTERS ================= */}
         {preferences.newsletter && (
           <section>
-            <h2 className="text-2xl font-bold mb-4">
-              Newsletters Available for You
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">
+                Newsletters Available for You
+              </h2>
+
+              <div className="flex gap-2">
+                <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
+                <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
+                <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+              </div>
+            </div>
 
             {newsletters.length === 0 ? (
               <p className="text-gray-600">
@@ -244,18 +231,9 @@ export function UserPreferenceSettingsPage() {
                     key={n.newsletter_id}
                     className="bg-white rounded-2xl shadow-lg p-6"
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold text-pink-600">
-                        {n.news_name}
-                      </h3>
-
-                      <div className="flex gap-2">
-                        <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
-                        <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
-                        <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
-                      </div>
-                    </div>
-
+                    <h3 className="text-xl font-semibold text-pink-600 mb-2">
+                      {n.news_name}
+                    </h3>
                     <p className="text-gray-600">{n.content}</p>
                   </div>
                 ))}
@@ -315,4 +293,5 @@ export function UserPreferenceSettingsPage() {
     </div>
   );
 }
+
 
