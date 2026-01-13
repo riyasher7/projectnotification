@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-//import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
@@ -12,7 +11,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { loginEmployee, loginUser } = useAuth();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,61 +19,40 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      let response = await fetch(
-        'http://127.0.0.1:9100/auth/employee/login',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        loginEmployee(data);
-
-        if (data.role_id === 1) {
-          navigate('/dashboard');
-        } else {
-          navigate('/notifications');
-        }
-        return;
-      }
-
-      response = await fetch(
+      const response = await fetch(
         'http://127.0.0.1:9100/auth/user/login',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
+          body: JSON.stringify({ email, password }),
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        loginUser(data);
-        navigate(`/user/${data.user_id}/preferences`);
-        return;
+      if (!response.ok) {
+        throw new Error('Invalid email or password');
       }
 
-      throw new Error('Invalid email or password');
+      const data = await response.json();
+
+      //Store user in AuthContext
+      login(data);
+
+      //Role-based redirect
+      if (data.role_id === 1) {
+        navigate('/dashboard');
+      } else if (data.role_id === 2 || data.role_id === 3) {
+        navigate('/notifications');
+      } else {
+        navigate(`/user/${data.user_id}/preferences`);
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">

@@ -17,13 +17,13 @@ export function RoleRoute({
   children: JSX.Element;
   allow: RoleId[];
 }) {
-  const { employee } = useAuth();
+  const { user } = useAuth();
 
-  if (!employee) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!allow.includes(employee.role_id as RoleId)) {
+  if (!allow.includes(user.role_id as RoleId)) {
     return <Navigate to="/notifications" replace />;
   }
 

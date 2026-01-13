@@ -17,7 +17,7 @@ export type Campaign = {
 
 export function CampaignManagementPage() {
   const navigate = useNavigate();
-  const { employee, isViewer } = useAuth();
+  const { user, isViewer } = useAuth();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ export function CampaignManagementPage() {
             notification_type: mappedType,
             city_filter: formData.city_filter || null,
             content: formData.content,
-            created_by: employee?.employee_id,           
+            created_by: user?.user_id,           
           }),
         }
       );

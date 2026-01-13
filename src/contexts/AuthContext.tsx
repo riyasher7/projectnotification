@@ -1,90 +1,86 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Employee } from '../lib/supabase';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode
+} from 'react';
 
-type User = {
-  id: string;
-  email?: string;
+/* ===================== TYPES ===================== */
+
+// Matches `users` table
+export type AuthUser = {
+  user_id: string;
+  email: string;
+  name?: string;
+  role_id: number; // 1=Admin, 2=Creator, 3=Viewer, 4=User
 };
 
 type AuthContextType = {
-  employee: Employee | null;
-  user: User | null;
+  user: AuthUser | null;
 
-  loginEmployee: (employee: Employee) => void;
-  loginUser: (user: User) => void;
-
+  login: (user: AuthUser) => void;
   logout: () => void;
 
   isAdmin: boolean;
   isCreator: boolean;
   isViewer: boolean;
+  isNormalUser: boolean;
 };
+
+/* ===================== CONTEXT ===================== */
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/* ===================== PROVIDER ===================== */
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  /* -------------------- Restore session -------------------- */
+  /* ---------- Restore session ---------- */
   useEffect(() => {
-    const storedEmployee = localStorage.getItem('employee');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedEmployee) {
-      setEmployee(JSON.parse(storedEmployee));
-    }
-
+    const storedUser = localStorage.getItem('auth_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
-  /* -------------------- Login -------------------- */
-  const loginEmployee = (emp: Employee) => {
-    setEmployee(emp);
-    setUser(null);
-    localStorage.setItem('employee', JSON.stringify(emp));
-    localStorage.removeItem('user');
-  };
-
-  const loginUser = (usr: User) => {
+  /* ---------- Login ---------- */
+  const login = (usr: AuthUser) => {
     setUser(usr);
-    setEmployee(null);
-    localStorage.setItem('user', JSON.stringify(usr));
-    localStorage.removeItem('employee');
+    localStorage.setItem('auth_user', JSON.stringify(usr));
   };
 
-  /* -------------------- Logout -------------------- */
+  /* ---------- Logout ---------- */
   const logout = () => {
-    setEmployee(null);
     setUser(null);
-    localStorage.removeItem('employee');
-    localStorage.removeItem('user');
+    localStorage.removeItem('auth_user');
   };
 
-  /* -------------------- Role helpers -------------------- */
-  const isAdmin = employee?.role_id === 1;
-  const isCreator = employee?.role_id === 2;
-  const isViewer = employee?.role_id === 3;
+  /* ---------- Role helpers ---------- */
+  const isAdmin = user?.role_id === 1;
+  const isCreator = user?.role_id === 2;
+  const isViewer = user?.role_id === 3;
+  const isNormalUser = user?.role_id === 4;
 
   return (
     <AuthContext.Provider
       value={{
-        employee,
         user,
-        loginEmployee,
-        loginUser,
+        login,
         logout,
         isAdmin,
         isCreator,
-        isViewer
+        isViewer,
+        isNormalUser
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
+
+/* ===================== HOOK ===================== */
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -93,3 +89,4 @@ export function useAuth() {
   }
   return context;
 }
+

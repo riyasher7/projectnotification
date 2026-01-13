@@ -39,11 +39,11 @@ const getRoleName = (roleId: RoleId) => {
 };
 
 export function Layout({ children }: LayoutProps) {
-  const { employee, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  if (!employee) {
+  if (!user) {
     return <>{children}</>;
   }
 
@@ -81,7 +81,7 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   const filteredNav = navigation.filter(item =>
-    item.roles.includes(employee.role_id as RoleId)
+    item.roles.includes(user.role_id as RoleId)
   );
 
   return (
@@ -125,9 +125,9 @@ export function Layout({ children }: LayoutProps) {
             {/* User + Logout */}
             <div className="flex items-center space-x-4">
               <div className="text-[#FF1774] text-sm text-right">
-                <div className="font-medium">{employee.email}</div>
+                <div className="font-medium">{user.email}</div>
                 <div className="text-[#FF1774] text-xs capitalize">
-                  {getRoleName(employee.role_id as RoleId)}
+                  {getRoleName(user.role_id as RoleId)}
                 </div>
               </div>
 

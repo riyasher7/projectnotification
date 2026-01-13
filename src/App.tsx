@@ -22,11 +22,11 @@ import { NewsletterPreviewPage } from './pages/NewsletterPreviewPage';
 import { NewsletterSendPage } from './pages/NewsletterSendPage';
 
 function EmployeeRedirect() {
-  const { employee } = useAuth();
+  const { user } = useAuth();
 
-  if (!employee) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" />;
 
-  if (employee.role_id == 1) return <Navigate to="/dashboard" />;
+  if (user.role_id == 1) return <Navigate to="/dashboard" />;
   return <Navigate to="/notifications" />;
 }
 

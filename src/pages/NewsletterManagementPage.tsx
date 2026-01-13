@@ -17,7 +17,7 @@ export type Newsletter = {
 
 export function NewsletterManagementPage() {
     const navigate = useNavigate();
-    const { employee, isViewer } = useAuth();
+    const { user, isViewer } = useAuth();
 
     const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,7 +53,7 @@ export function NewsletterManagementPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!employee?.employee_id) {
+        if (!user?.user_id) {
             alert('User not authenticated');
             return;
         }
@@ -68,7 +68,7 @@ export function NewsletterManagementPage() {
                         newsletter_name: formData.name,
                         city_filter: formData.city_filter || null,
                         content: formData.content,
-                        created_by: employee.employee_id,
+                        created_by: user.user_id,
                     }),
                 }
             );
