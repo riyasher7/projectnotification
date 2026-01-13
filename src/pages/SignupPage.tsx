@@ -93,7 +93,7 @@ export function SignupPage() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-pink-600 mb-2">Nykaa</h1>
+            <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto mb-4 mx-auto" />
             <h2 className="text-2xl font-semibold text-gray-800">
               User Signup
             </h2>

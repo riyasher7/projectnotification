@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 
 export type Newsletter = {
     newsletter_id: string;
-    newsletter_name: string;
+    news_name: string;
     city_filter: string | null;
     content: string;
     status: 'DRAFT' | 'SENT';
@@ -75,7 +75,7 @@ export function NewsletterPreviewPage() {
                                 <div>
                                     <p className="text-sm text-gray-600">Newsletter Name</p>
                                     <p className="text-lg font-semibold text-gray-800">
-                                        {newsletter.newsletter_name}
+                                        {newsletter.news_name}
                                     </p>
                                 </div>
 
@@ -105,12 +105,6 @@ export function NewsletterPreviewPage() {
                                     </p>
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-600">Created By (UUID)</p>
-                                <p className="text-xs text-gray-500 break-all">
-                                    {newsletter.created_by}
-                                </p>
-                            </div>
 
                             <div className="mt-6">
                                 <p className="text-sm text-gray-600">Newsletter Content</p>
@@ -121,7 +115,7 @@ export function NewsletterPreviewPage() {
                         </div>
 
                         {/* Send / Recipients */}
-                        {newsletter.status === 'DRAFT' && (
+                        {(newsletter.status === 'DRAFT' || newsletter.status === 'SENT') && (
                             <div className="bg-white rounded-xl shadow-lg p-6">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-4">
                                     Eligible Recipients

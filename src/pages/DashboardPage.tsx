@@ -9,6 +9,9 @@ type Stats = {
   totalCampaigns: number;
   sentCampaigns: number;
   draftCampaigns: number;
+  totalNewsletters: number;
+  sentNewsletters: number;
+  draftNewsletters: number;
 };
 
 export function DashboardPage() {
@@ -18,6 +21,9 @@ export function DashboardPage() {
     totalCampaigns: 0,
     sentCampaigns: 0,
     draftCampaigns: 0,
+    totalNewsletters: 0,
+    sentNewsletters: 0,
+    draftNewsletters: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -27,9 +33,10 @@ export function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const [usersRes, campaignsRes] = await Promise.all([
+      const [usersRes, campaignsRes, newslettersRes] = await Promise.all([
         supabase.from('users').select('is_active', { count: 'exact' }).eq('role_id', 4),
         supabase.from('campaigns').select('status', { count: 'exact' }),
+        supabase.from('newsletters').select('status', { count: 'exact' }),
       ]);
 
       const totalUsers = usersRes.count || 0;
@@ -38,16 +45,21 @@ export function DashboardPage() {
 
       const totalCampaigns = campaignsRes.count || 0;
       const sentCampaigns =
-        campaignsRes.data?.filter(c => c.status === 'sent').length || 0;
+        campaignsRes.data?.filter(c => c.status === 'SENT').length || 0;
       const draftCampaigns =
-        campaignsRes.data?.filter(c => c.status === 'draft').length || 0;
-
+        campaignsRes.data?.filter(c => c.status === 'DRAFT').length || 0;
+      const totalNewsletters = newslettersRes.count || 0;
+      const sentNewsletters = newslettersRes.data?.filter(n => n.status === 'SENT').length || 0;
+      const draftNewsletters = newslettersRes.data?.filter(n => n.status === 'DRAFT').length || 0;
       setStats({
         totalUsers,
         activeUsers,
         totalCampaigns,
         sentCampaigns,
         draftCampaigns,
+        totalNewsletters,
+        sentNewsletters,
+        draftNewsletters,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -62,6 +74,9 @@ export function DashboardPage() {
     { label: 'Total Campaigns', value: stats.totalCampaigns, icon: Mail, color: 'bg-purple-500' },
     { label: 'Sent Campaigns', value: stats.sentCampaigns, icon: Send, color: 'bg-pink-500' },
     { label: 'Draft Campaigns', value: stats.draftCampaigns, icon: Mail, color: 'bg-orange-500' },
+    { label: 'Total Newsletters', value: stats.totalNewsletters, icon: Mail, color: 'bg-teal-500' },
+    { label: 'Sent Newsletters', value: stats.sentNewsletters, icon: Send, color: 'bg-red-500' },
+    { label: 'Draft Newsletters', value: stats.draftNewsletters, icon: Mail, color: 'bg-yellow-500' },
   ];
 
   return (
