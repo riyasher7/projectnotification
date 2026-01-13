@@ -59,10 +59,10 @@ export function NotificationPage() {
                 <Newspaper size={40} className="text-blue-600" />
               </div>
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                Offers
+                Newsletters
               </h2>
               <p className="text-gray-600">
-                Manage and send promotional offers
+                Manage and send Newsletters
               </p>
             </div>
           </button>
