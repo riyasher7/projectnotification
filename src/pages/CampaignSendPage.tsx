@@ -39,12 +39,6 @@ export function CampaignSendPage() {
 
     if (usersError) throw usersError;
 
-    const prefKeyMap: Record<string, string> = {
-      offers: 'offers',
-      order_updates: 'order_updates',
-      newsletter: 'newsletter',
-    };
-
     const cityFilter = campaignData.city_filter?.toLowerCase();
 
     const filtered =
@@ -59,7 +53,7 @@ export function CampaignSendPage() {
         const prefs = user.user_preferences;
         if (!prefs) return false;
 
-        const prefKey = prefKeyMap[campaignData.notification_type];
+        const prefKey = 'offers';
         return prefs[prefKey] === true;
       }) || [];
 

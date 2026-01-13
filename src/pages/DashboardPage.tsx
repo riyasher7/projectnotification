@@ -28,7 +28,7 @@ export function DashboardPage() {
   const fetchStats = async () => {
     try {
       const [usersRes, campaignsRes] = await Promise.all([
-        supabase.from('users').select('is_active', { count: 'exact' }),
+        supabase.from('users').select('is_active', { count: 'exact' }).eq('role_id', 4),
         supabase.from('campaigns').select('status', { count: 'exact' }),
       ]);
 

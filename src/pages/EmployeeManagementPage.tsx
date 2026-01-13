@@ -4,10 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 
 interface Employee {
-  employee_id: number;
+  user_id: number;
+  name: string;
   email: string;
   role_id: number;
 }
+
+const roleMap: Record<number, string> = {
+  1: 'Admin',
+  2: 'Creator',
+  3: 'Viewer',
+};
 
 export function EmployeeManagementPage() {
   const navigate = useNavigate();
@@ -18,11 +25,12 @@ export function EmployeeManagementPage() {
     fetchEmployees();
   }, []);
 
-  // 🔐 Fetch via backend (admin-protected)
+  // 🔐 Fetch employees (admin protected)
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const res = await fetch('http://localhost:9100/admin/employeesmgmt', {
-        credentials: 'include', // cookie / session based auth
+        credentials: 'include',
       });
 
       if (res.status === 401) {
@@ -35,7 +43,7 @@ export function EmployeeManagementPage() {
         return;
       }
 
-      const data = await res.json();
+      const data: Employee[] = await res.json();
       setEmployees(data);
     } catch (err) {
       console.error('Failed to load employees', err);
@@ -43,8 +51,8 @@ export function EmployeeManagementPage() {
       setLoading(false);
     }
   };
-  
-  // 🗑 Delete employee (admin-only backend route)
+
+  // 🗑 Delete employee
   const deleteEmployee = async (employeeId: number) => {
     if (!confirm('Delete this employee?')) return;
 
@@ -56,24 +64,29 @@ export function EmployeeManagementPage() {
       }
     );
 
-    if (res.ok) fetchEmployees();
+    if (!res.ok) {
+      alert('Failed to delete employee');
+      return;
+    }
+
+    fetchEmployees();
   };
 
   return (
     <Layout>
       <div className="px-4">
-        <h1 className="text-3xl font-bold mb-6">
-          Employee Management
-        </h1>
-      <div className="flex justify-end gap-3 mb-6">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="bg-gradient-to-r from-[#FF1774] to-[#FF1774] text-white px-4 py-2 rounded-lg flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Add Employee
-        </button>
-      </div>
+        <h1 className="text-3xl font-bold mb-6">Employee Management</h1>
+
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => navigate('/employees/create')}
+            className="bg-[#FF1774] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Add Employee
+          </button>
+        </div>
+
         {loading ? (
           <div className="text-center py-12">Loading...</div>
         ) : (
@@ -82,12 +95,18 @@ export function EmployeeManagementPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold">
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold">
+                  <th className="px-6 py-3 text-right text-xs font-semibold">
                     Actions
                   </th>
                 </tr>
@@ -95,16 +114,16 @@ export function EmployeeManagementPage() {
 
               <tbody className="divide-y">
                 {employees.map(emp => (
-                  <tr key={emp.employee_id}>
+                  <tr key={emp.user_id}>
+                    <td className="px-6 py-4">{emp.user_id}</td>
+                    <td className="px-6 py-4">{emp.name}</td>
+                    <td className="px-6 py-4">{emp.email}</td>
                     <td className="px-6 py-4">
-                      {emp.email}
+                      {roleMap[emp.role_id] ?? 'Unknown'}
                     </td>
-                    <td className="px-6 py-4">
-                      {emp.role_id === 1 ? 'Admin' : 'Employee'}
-                    </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => deleteEmployee(emp.employee_id)}
+                        onClick={() => deleteEmployee(emp.user_id)}
                         className="text-red-600 hover:text-red-800"
                         title="Delete employee"
                       >
@@ -121,4 +140,3 @@ export function EmployeeManagementPage() {
     </Layout>
   );
 }
-
