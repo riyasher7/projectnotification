@@ -27,9 +27,6 @@ type CampaignLog = {
   users?: User;
 };
 
-/* =======================
-   Component
-======================= */
 
 export function NotificationLogsPage() {
   const [logs, setLogs] = useState<CampaignLog[]>([]);
@@ -37,9 +34,6 @@ export function NotificationLogsPage() {
   const [selectedCampaign, setSelectedCampaign] = useState('');
   const [loading, setLoading] = useState(true);
 
-  /* =======================
-     Effects
-  ======================= */
 
   useEffect(() => {
     fetchCampaigns();

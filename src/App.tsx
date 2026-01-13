@@ -17,6 +17,10 @@ import { EmployeeRoute } from './components/EmployeeRoute';
 import { UserRoute } from './components/UserRoute';
 import { RoleRoute } from './components/RoleRoute';
 import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
+import { NotificationPage } from './pages/NotificationPage';
+import { NewsletterManagementPage } from './pages/NewsletterManagementPage';
+import { NewsletterPreviewPage } from './pages/NewsletterPreviewPage';
+import { NewsletterSendPage } from './pages/NewsletterSendPage';
 
 function EmployeeRedirect() {
   const { employee } = useAuth();
@@ -33,7 +37,7 @@ function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/signup" element={<SignupPage />} />
-      
+
       {/* User */}
       <Route path="/user/login" element={<UserPreferenceLoginPage />} />
       <Route
@@ -73,6 +77,14 @@ function AppRoutes() {
           </RoleRoute>
         }
       />
+      <Route
+        path="/notifications"
+        element={
+          <RoleRoute allow={[1, 2, 3]}>
+            <NotificationPage />
+          </RoleRoute>
+        }
+      />
 
       <Route
         path="/campaigns"
@@ -82,7 +94,6 @@ function AppRoutes() {
           </RoleRoute>
         }
       />
-
 
       <Route
         path="/campaigns/:id/preview"
@@ -105,7 +116,36 @@ function AppRoutes() {
           </RoleRoute>
         }
       />
-      
+      <Route
+        path="/newsletters"
+        element={
+          <RoleRoute allow={[1, 2, 3]}>
+            <NewsletterManagementPage />
+          </RoleRoute>
+        }
+      />
+
+      <Route
+        path="/newsletters/:id/preview"
+        element={
+          <RoleRoute allow={[1, 2, 3]}>
+            <NewsletterPreviewPage />
+          </RoleRoute>
+        }
+      />
+      <Route
+        path="/newsletters/:id/recipients"
+        element={<NewsletterPreviewPage />}
+      />
+
+      <Route
+        path="/newsletters/:id/send"
+        element={
+          <RoleRoute allow={[1, 3]}>
+            <NewsletterSendPage />
+          </RoleRoute>
+        }
+      />
 
       {/* Logs */}
       <Route
