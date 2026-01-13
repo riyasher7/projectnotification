@@ -24,10 +24,7 @@ export function CampaignManagementPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    notification_type: 'promotional_offers' as
-      | 'promotional_offers'
-      | 'order_updates'
-      | 'newsletter',
+    notification_type: 'promotional_offers',
     city_filter: '',
     content: '',
   });
@@ -55,20 +52,9 @@ export function CampaignManagementPage() {
       setLoading(false);
     }
   };
-  const notificationTypeMap: Record<string, string> = {
-    newsletter: "newsletter",
-    promotional_offers: "offers",
-    order_updates: "order_updates",
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const mappedType = notificationTypeMap[formData.notification_type];
-
-    if (!mappedType) {
-      alert("Invalid notification type");
-      return;
-    }
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
@@ -77,7 +63,6 @@ export function CampaignManagementPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             campaign_name: formData.name,             
-            notification_type: mappedType,
             city_filter: formData.city_filter || null,
             content: formData.content,
             created_by: user?.user_id,           
@@ -272,25 +257,14 @@ export function CampaignManagementPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Notification Type
                   </label>
-                  <select
-                    value={formData.notification_type}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        notification_type:
-                          e.target.value as typeof formData.notification_type,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-                    required
-                  >
-                    <option value="promotional_offers">
-                      Promotional Offers
-                    </option>
-                    <option value="order_updates">Order Updates</option>
-                    <option value="newsletter">Newsletter</option>
-                  </select>
+                  <input
+                    type="text"
+                    value="Promotional Offers"
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  />
                 </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
