@@ -20,6 +20,7 @@ import { NotificationPage } from './pages/NotificationPage';
 import { NewsletterManagementPage } from './pages/NewsletterManagementPage';
 import { NewsletterPreviewPage } from './pages/NewsletterPreviewPage';
 import { NewsletterSendPage } from './pages/NewsletterSendPage';
+import { NewsletterRecipientsPage } from './pages/NewsletterRecipientsPage';
 
 function EmployeeRedirect() {
   const { user } = useAuth();
@@ -134,7 +135,7 @@ function AppRoutes() {
       />
       <Route
         path="/newsletters/:id/recipients"
-        element={<NewsletterPreviewPage />}
+        element={<NewsletterRecipientsPage />}
       />
 
       <Route

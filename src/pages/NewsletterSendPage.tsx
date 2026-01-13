@@ -32,7 +32,6 @@ export function NewsletterSendPage() {
 
   const fetchNewsletterAndRecipients = async () => {
     try {
-      // ✅ Fetch newsletter
       const { data: newsletterData, error: newsletterError } = await supabase
         .from('newsletters')
         .select('*')
@@ -42,7 +41,6 @@ export function NewsletterSendPage() {
       if (newsletterError) throw newsletterError;
       setNewsletter(newsletterData);
 
-      // ✅ Fetch active users
       const { data: usersData, error: usersError } = await supabase
         .from('users')
         .select('user_id, city')
@@ -97,12 +95,13 @@ export function NewsletterSendPage() {
   return (
     <Layout>
       <div className="px-4">
+        {/* Back */}
         <button
           onClick={() => navigate('/newsletters')}
-          className="mb-6 flex items-center space-x-2 text-pink-600"
+          className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700"
         >
           <ArrowLeft size={20} />
-          <span>Back to Newsletters</span>
+          <span className="font-medium">Back to Newsletters</span>
         </button>
 
         {loading ? (
@@ -112,19 +111,23 @@ export function NewsletterSendPage() {
         ) : (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-8">
+              {/* Header */}
               <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="text-yellow-600" size={40} />
+                <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="text-pink-600" size={40} />
                 </div>
+
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
                   Confirm Newsletter Send
                 </h2>
+
                 <p className="text-gray-600">
                   This action cannot be undone.
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-6 mb-6 space-y-4">
+              {/* Details */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6 space-y-5">
                 <div>
                   <p className="text-sm text-gray-600">Newsletter Name</p>
                   <p className="text-lg font-semibold text-gray-800">
@@ -141,17 +144,19 @@ export function NewsletterSendPage() {
 
                 <div>
                   <p className="text-sm text-gray-600">Message Content</p>
-                  <p className="text-gray-800 mt-2">
+                  <p className="text-gray-800 mt-2 whitespace-pre-wrap">
                     {newsletter.content}
                   </p>
                 </div>
               </div>
 
+              {/* Actions */}
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/newsletters')}
                   disabled={sending}
-                  className="flex-1 border px-6 py-3 rounded-lg"
+                  className="flex-1 border border-gray-300 px-6 py-3 rounded-lg
+                             hover:bg-gray-50 transition"
                 >
                   Cancel
                 </button>
@@ -159,7 +164,10 @@ export function NewsletterSendPage() {
                 <button
                   onClick={handleSendNewsletter}
                   disabled={sending || userCount === 0}
-                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg flex items-center justify-center space-x-2"
+                  className="flex-1 bg-green-600 hover:bg-green-700
+                             text-white px-6 py-3 rounded-lg
+                             flex items-center justify-center space-x-2
+                             transition disabled:opacity-50"
                 >
                   <Send size={20} />
                   <span>{sending ? 'Sending...' : 'Send Newsletter'}</span>
@@ -170,17 +178,22 @@ export function NewsletterSendPage() {
         )}
       </div>
 
+      {/* Success Modal */}
       {showSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 max-w-md text-center">
-            <h2 className="text-2xl font-bold mb-2">Newsletter Sent</h2>
-            <p className="mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md text-center shadow-xl">
+            <h2 className="text-2xl font-bold mb-2 text-gray-800">
+              Newsletter Sent
+            </h2>
+
+            <p className="mb-6 text-gray-600">
               Sent to <b>{sentCount}</b> users
             </p>
 
             <button
               onClick={() => navigate('/newsletters')}
-              className="bg-pink-600 text-white px-4 py-2 rounded-lg"
+              className="bg-pink-600 hover:bg-pink-700
+                         text-white px-5 py-2.5 rounded-lg transition"
             >
               Back to Newsletters
             </button>

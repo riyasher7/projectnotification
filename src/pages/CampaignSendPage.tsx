@@ -36,7 +36,7 @@ export function CampaignSendPage() {
       .from('users')
       .select('*, user_preferences(*)')
       .eq('is_active', true)
-      .eq('role_id', 4); 
+      .eq('role_id', 4);
 
     if (usersError) throw usersError;
 

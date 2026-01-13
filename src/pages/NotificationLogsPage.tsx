@@ -3,9 +3,6 @@ import { Filter } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 
-/* =======================
-   Types
-======================= */
 
 type Campaign = {
   campaign_id: string;
