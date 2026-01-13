@@ -11,7 +11,7 @@ export type Campaign = {
   city_filter: string | null;
   content: string;
   created_by: string;
-  status: 'draft' | 'sent';
+  status: 'DRAFT' | 'SENT';
   created_at: string;
 };
 
@@ -144,7 +144,7 @@ export function CampaignManagementPage() {
                         {campaign.campaign_name}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'sent'
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'SENT'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                           }`}
@@ -204,7 +204,7 @@ export function CampaignManagementPage() {
                       <span>Preview</span>
                     </button>
 
-                    {campaign.status === 'draft' && !isViewer && (
+                    {campaign.status === 'DRAFT' && !isViewer && (
                       <button
                         onClick={() =>
                           navigate(`/campaigns/${campaign.campaign_id}/send`)

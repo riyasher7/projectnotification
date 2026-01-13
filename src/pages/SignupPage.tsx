@@ -35,6 +35,7 @@ export function SignupPage() {
             city,
             gender,
             is_active: true,
+            role_id: 4,
           },
         ])
         .select()
@@ -50,14 +51,23 @@ export function SignupPage() {
             user_id: user.user_id,
             offers: true,
             order_updates: true,
-            newsletter: true,
-            email_channel: true,
-            sms_channel: false,
-            push_channel: false,
+            newsletter: true
+          },
+        ]);
+
+      const { error: notifError } = await supabase
+        .from('notification_type')
+        .insert([
+          {
+            user_id: user.user_id,
+            email: true,
+            sms: true,
+            push: true
           },
         ]);
 
       if (prefError) throw prefError;
+      if (notifError) throw notifError;
 
       // 3️⃣ Redirect to user preference portal
       navigate(`/user/${user.user_id}/preferences`);

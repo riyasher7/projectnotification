@@ -29,6 +29,7 @@ export function UserManagementPage() {
       const { data, error } = await supabase
         .from('users')
         .select('*')
+        .eq('role_id',4)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

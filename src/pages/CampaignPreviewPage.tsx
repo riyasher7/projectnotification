@@ -82,9 +82,7 @@ export function CampaignPreviewPage() {
                 <div>
                   <p className="text-sm text-gray-600">Notification Type</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {getNotificationTypeLabel(
-                      campaign.notification_type
-                    )}
+                    Promotional Offers
                   </p>
                 </div>
 
