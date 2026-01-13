@@ -51,7 +51,8 @@ export function SignupPage() {
             user_id: user.user_id,
             offers: true,
             order_updates: true,
-            newsletter: true
+            newsletter: true,
+            city: city
           },
         ]);
 

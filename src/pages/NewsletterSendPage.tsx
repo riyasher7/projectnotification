@@ -46,7 +46,8 @@ export function NewsletterSendPage() {
       const { data: usersData, error: usersError } = await supabase
         .from('users')
         .select('user_id, city')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('role_id', 4);
 
       if (usersError) throw usersError;
 

@@ -19,13 +19,12 @@ type User = {
 
 type CampaignLog = {
   log_id: string;
-  campaign_id: string;
   user_id: string;
-  status: 'success' | 'failed';
+  notification_type: string;
+  status: 'SUCCESS' | 'FAILED';
   sent_at: string;
-  campaigns?: Campaign;
-  users?: User;
 };
+
 
 
 export function NotificationLogsPage() {
@@ -66,29 +65,16 @@ export function NotificationLogsPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('campaign_logs')
+      const { data, error } = await supabase
+        .from('notification_logs')
         .select(`
-        log_id,
-        status,
-        sent_at,
-        campaign_id,
-        user_id,
-        campaigns (
-          campaign_name
-        ),
-        users (
-          name,
-          email
-        )
-      `)
+          log_id,
+          user_id,
+          notification_type,
+          status,
+          sent_at
+        `)
         .order('sent_at', { ascending: false });
-
-      if (selectedCampaign) {
-        query = query.eq('campaign_id', selectedCampaign);
-      }
-
-      const { data, error } = await query.returns<CampaignLog[]>();
 
       if (error) throw error;
 
@@ -102,13 +88,14 @@ export function NotificationLogsPage() {
   };
 
 
+
   /* =======================
      Helpers
   ======================= */
 
   const getSuccessRate = () => {
     if (logs.length === 0) return 0;
-    const successCount = logs.filter(log => log.status === 'success').length;
+    const successCount = logs.filter(log => log.status === 'SUCCESS').length;
     return Math.round((successCount / logs.length) * 100);
   };
 
@@ -145,7 +132,7 @@ export function NotificationLogsPage() {
               Successful
             </p>
             <p className="text-4xl font-bold text-green-600 mt-2">
-              {logs.filter(log => log.status === 'success').length}
+              {logs.filter(log => log.status === 'SUCCESS').length}
             </p>
           </div>
 
@@ -195,10 +182,13 @@ export function NotificationLogsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Campaign
+                    Log ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    User
+                    User ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Notification Type
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Status
@@ -208,30 +198,34 @@ export function NotificationLogsPage() {
                   </th>
                 </tr>
               </thead>
+
               <tbody className="bg-white divide-y divide-gray-200">
                 {logs.map(log => (
                   <tr key={log.log_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {log.campaigns?.campaign_name || 'N/A'}
+                    <td className="px-6 py-4 text-xs text-gray-700">
+                      {log.log_id}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {log.users?.name || 'N/A'}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {log.users?.email || 'N/A'}
-                      </div>
+
+                    <td className="px-6 py-4 text-xs text-gray-700">
+                      {log.user_id}
                     </td>
+
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {log.notification_type}
+                    </td>
+
                     <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${log.status === 'success'
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          log.status === 'SUCCESS'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                          }`}
+                        }`}
                       >
                         {log.status}
                       </span>
                     </td>
+
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {new Date(log.sent_at).toLocaleString()}
                     </td>
@@ -239,6 +233,7 @@ export function NotificationLogsPage() {
                 ))}
               </tbody>
             </table>
+
 
             {logs.length === 0 && (
               <div className="text-center py-12 text-gray-600">

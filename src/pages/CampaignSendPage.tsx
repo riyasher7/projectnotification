@@ -35,7 +35,8 @@ export function CampaignSendPage() {
     const { data: usersData, error: usersError } = await supabase
       .from('users')
       .select('*, user_preferences(*)')
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .eq('role_id', 4); 
 
     if (usersError) throw usersError;
 
