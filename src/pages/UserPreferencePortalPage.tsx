@@ -441,5 +441,3 @@ export function UserPreferenceSettingsPage() {
     </div>
   );
 }
-
-

@@ -38,10 +38,10 @@ export function OrderManagementPage() {
     }
   };
 
-  const sendUpdate = async (orderId: string) => {
+  const sendUpdate = async (userId: string, orderId: string) => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}/send-update`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/users/${userId}/orders/${orderId}/send-update`,
         { method: 'POST' }
       );
 
@@ -95,7 +95,7 @@ export function OrderManagementPage() {
                     <b>Status:</b> {order.status}
                   </p>
 
-                  <p className="text-sm">
+                  <p className="text-sm"> 
                     <b>Created:</b>{' '}
                     {new Date(order.created_at).toLocaleDateString()}
                   </p>
@@ -107,7 +107,7 @@ export function OrderManagementPage() {
 
                 {!isViewer && order.status === 'UPDATE_REQUESTED' && (
                   <button
-                    onClick={() => sendUpdate(order.order_id)}
+                    onClick={() => sendUpdate(order.user_id, order.order_id)}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
                   >
                     <Send size={16} />
