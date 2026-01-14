@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +23,6 @@ export function SignupPage() {
     setError('');
     setLoading(true);
     try {
-      // 1️⃣ Insert user
       const response = await fetch(
         'http://localhost:9100/auth/user/signup',
         {
@@ -31,19 +31,37 @@ export function SignupPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            name, email, password, gender, city, phone: phoneNumber
+            name,
+            email,
+            password,
+            gender,
+            city,
+            phone: phoneNumber
           })
         }
       );
 
       if (!response.ok) {
-        throw new Error('Signup failed');
+        const errorData = await response.json().catch(() => ({ detail: 'Signup failed' }));
+        throw new Error(errorData.detail || 'Signup failed');
       }
 
-      const user = await response.json();
+      const data = await response.json();
+      // Backend now returns: { user_id, email, name, session_token }
 
-      // 3️⃣ Redirect to user preference portal
-      navigate(`/user/${user.user_id}/preferences`);
+      // Extract user data
+      const user = {
+        user_id: data.user_id,
+        email: data.email,
+        name: data.name,
+        role_id: 4 // New signups are always normal users (role_id: 4)
+      };
+
+      // Store user and session_token in AuthContext
+      login(user, data.session_token);
+
+      // Redirect to user preference portal
+      navigate(`/user/${data.user_id}/preferences`);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -51,12 +69,11 @@ export function SignupPage() {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <button
-          onClick={() => navigate('/employee/login')}
+          onClick={() => navigate('/login')}
           className="mb-6 flex items-center space-x-2 text-pink-600 hover:text-pink-700"
         >
           <ArrowLeft size={20} />
@@ -72,7 +89,6 @@ export function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-6">
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
@@ -155,6 +171,7 @@ export function SignupPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                minLength={6}
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
               />
             </div>
@@ -174,6 +191,18 @@ export function SignupPage() {
               <span>{loading ? 'Creating account...' : 'Sign Up'}</span>
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <button
+                onClick={() => navigate('/login')}
+                className="text-pink-600 hover:underline font-medium"
+              >
+                Login
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

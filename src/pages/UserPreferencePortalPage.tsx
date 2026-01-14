@@ -7,6 +7,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 type UserPreference = {
   user_id: string;
@@ -59,6 +60,8 @@ type NotificationMessage = {
 export function UserPreferenceSettingsPage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
+  const { user, logout, getAuthHeaders } = useAuth();
+  
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
@@ -76,8 +79,7 @@ export function UserPreferenceSettingsPage() {
     console.log('showNotification', { title, content });
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const n: NotificationMessage = { id, title, content, createdAt: Date.now() };
-    setNotifications(prev => [n, ...prev].slice(0, 6)); // limit stack
-    // auto-dismiss
+    setNotifications(prev => [n, ...prev].slice(0, 6));
     setTimeout(() => {
       setNotifications(prev => prev.filter(x => x.id !== id));
     }, 10000);
@@ -147,22 +149,29 @@ export function UserPreferenceSettingsPage() {
 
   const fetchData = async () => {
     try {
+      // ✅ Add authentication headers to all requests
+      const headers = getAuthHeaders();
+
       const prefRes = await fetch(
-        `http://localhost:9100/users/${userId}/preferences`
+        `http://localhost:9100/users/${userId}/preferences`,
+        { headers }
       );
-      console.log(userId)
-      if (!prefRes.ok) throw new Error();
+      console.log(userId);
+      if (!prefRes.ok) throw new Error('Failed to fetch preferences');
 
       const prefData: UserPreference = await prefRes.json();
       setPreferences(prefData);
 
-      const campRes = await fetch(`http://localhost:9100/campaigns`);
+      const campRes = await fetch(`http://localhost:9100/campaigns`, { headers });
       const campData: Campaign[] = campRes.ok ? await campRes.json() : [];
 
-      const newsRes = await fetch(`http://localhost:9100/newsletters`);
+      const newsRes = await fetch(`http://localhost:9100/newsletters`, { headers });
       const newsData: Newsletter[] = newsRes.ok ? await newsRes.json() : [];
 
-      const orderRes = await fetch(`http://localhost:9100/users/${userId}/orders`);
+      const orderRes = await fetch(
+        `http://localhost:9100/users/${userId}/orders`,
+        { headers }
+      );
       const orderData: Order[] = orderRes.ok ? await orderRes.json() : [];
 
       setOrders(orderData);
@@ -188,6 +197,7 @@ export function UserPreferenceSettingsPage() {
       }
     } catch (err) {
       console.error(err);
+      setMessage('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -201,7 +211,7 @@ export function UserPreferenceSettingsPage() {
         `http://localhost:9100/users/${userId}/orders`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             order_name: orderName,
           }),
@@ -219,7 +229,6 @@ export function UserPreferenceSettingsPage() {
       alert('Failed to create order');
     }
   };
-
 
   type PreferenceToggleKey =
     | 'offers'
@@ -247,7 +256,6 @@ export function UserPreferenceSettingsPage() {
     const prev = preferences;
     const updated = { ...prev, [key]: !prev[key] };
 
-    // optimistic update
     setPreferences(updated);
     setMessage('');
 
@@ -256,14 +264,13 @@ export function UserPreferenceSettingsPage() {
         `http://localhost:9100/users/${userId}/preferences`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify(updated),
         }
       );
       if (!res.ok) throw new Error();
       setMessage('Preference updated');
     } catch {
-      // revert on failure
       setPreferences(prev);
       setMessage('Failed to update preference');
     }
@@ -280,7 +287,7 @@ export function UserPreferenceSettingsPage() {
         `http://localhost:9100/users/${userId}/preferences`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify(preferences),
         }
       );
@@ -292,11 +299,15 @@ export function UserPreferenceSettingsPage() {
       setSaving(false);
     }
   };
+
   const requestOrderUpdate = async (orderId: string) => {
     try {
       await fetch(
         `http://localhost:9100/users/${userId}/orders/${orderId}/request-update`,
-        { method: 'POST' }
+        {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        }
       );
 
       setOrders(prev =>
@@ -313,6 +324,10 @@ export function UserPreferenceSettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const ChannelBadge = ({
     active,
@@ -328,8 +343,9 @@ export function UserPreferenceSettingsPage() {
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 ${active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
-        }`}
+      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 ${
+        active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
+      }`}
     >
       <Icon size={14} />
       {label}
@@ -393,14 +409,17 @@ export function UserPreferenceSettingsPage() {
               onClick={() => setShowUserMenu(s => !s)}
               className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow"
             >
-              <div className="font-medium text-gray-700">{preferences.user_id || `User ${userId}`}</div>
+              <div className="font-medium text-gray-700">{user?.name || `User ${userId}`}</div>
               <div className="text-gray-500">▾</div>
             </button>
 
             {showUserMenu && (
               <div className="absolute right-0 mt-2 bg-white rounded shadow p-2 w-36">
                 <button
-                  onClick={() => { setShowUserMenu(false); navigate('/login'); }}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    handleLogout();
+                  }}
                   className="w-full text-left px-2 py-1 text-sm text-pink-600 hover:bg-pink-50 rounded"
                 >
                   Logout
@@ -495,8 +514,6 @@ export function UserPreferenceSettingsPage() {
             >
               Create Order
             </button>
-
-
           </div>
 
           {orders.length === 0 ? (
@@ -519,7 +536,7 @@ export function UserPreferenceSettingsPage() {
                     onClick={() => requestOrderUpdate(order.order_id)}
                     disabled={order.status !== 'PLACED'}
                     className={`px-4 py-2 rounded-lg text-sm text-white
-    ${order.status === 'PLACED'
+                      ${order.status === 'PLACED'
                         ? 'bg-pink-600 hover:bg-pink-700'
                         : 'bg-gray-300 cursor-not-allowed'
                       }`}
@@ -530,14 +547,13 @@ export function UserPreferenceSettingsPage() {
                         ? 'Sent'
                         : 'Request Update'}
                   </button>
-
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        {/* ================= PREFERENCES (UNCHANGED) ================= */}
+        {/* ================= PREFERENCES ================= */}
         <section className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <h2 className="text-xl font-bold">Notification Preferences</h2>
 
@@ -551,10 +567,11 @@ export function UserPreferenceSettingsPage() {
                 <span>{label}</span>
                 <button
                   onClick={() => toggle(key as PreferenceToggleKey)}
-                  className={`h-6 w-11 rounded-full ${preferences[key as PreferenceToggleKey]
-                    ? 'bg-pink-600'
-                    : 'bg-gray-300'
-                    }`}
+                  className={`h-6 w-11 rounded-full ${
+                    preferences[key as PreferenceToggleKey]
+                      ? 'bg-pink-600'
+                      : 'bg-gray-300'
+                  }`}
                 />
               </div>
             ))}
@@ -562,10 +579,11 @@ export function UserPreferenceSettingsPage() {
 
           {message && (
             <div
-              className={`text-sm text-center p-3 rounded-lg ${message.includes('success')
-                ? 'bg-green-50 text-green-600'
-                : 'bg-red-50 text-red-600'
-                }`}
+              className={`text-sm text-center p-3 rounded-lg ${
+                message.includes('success')
+                  ? 'bg-green-50 text-green-600'
+                  : 'bg-red-50 text-red-600'
+              }`}
             >
               {message}
             </div>
@@ -583,6 +601,7 @@ export function UserPreferenceSettingsPage() {
           </button>
         </section>
       </div>
+
       {showOrderModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">

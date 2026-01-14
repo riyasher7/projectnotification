@@ -2,31 +2,49 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Layout } from '../components/Layout';
-import { supabase, Campaign } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+
+type Campaign = {
+  campaign_id: string;
+  campaign_name: string;
+  notification_type?: string;
+  city_filter: string | null;
+  content: string;
+  created_by: string;
+  status: 'DRAFT' | 'SENT';
+  created_at: string;
+};
 
 export function CampaignPreviewPage() {
   const { id: campaignId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { getAuthHeaders } = useAuth();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!campaignId) return;
-
     fetchCampaign();
   }, [campaignId]);
 
   const fetchCampaign = async () => {
     try {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .single();
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
+        {
+          headers: getAuthHeaders()
+        }
+      );
 
-      if (error) throw error;
-      setCampaign(data);
+      if (!response.ok) {
+        throw new Error('Failed to fetch campaigns');
+      }
+
+      const campaigns: Campaign[] = await response.json();
+      const foundCampaign = campaigns.find(c => c.campaign_id === campaignId);
+      
+      setCampaign(foundCampaign || null);
     } catch (err) {
       console.error('Failed to fetch campaign', err);
     } finally {
@@ -34,13 +52,14 @@ export function CampaignPreviewPage() {
     }
   };
 
-  const getNotificationTypeLabel = (type: string) => {
+  const getNotificationTypeLabel = (type?: string) => {
     const labels: Record<string, string> = {
       offers: 'Promotional Offers',
       order_updates: 'Order Updates',
       newsletter: 'Newsletter',
+      promotional_offers: 'Promotional Offers',
     };
-    return labels[type] || type;
+    return labels[type || ''] || 'Promotional Offers';
   };
 
   return (
@@ -82,7 +101,7 @@ export function CampaignPreviewPage() {
                 <div>
                   <p className="text-sm text-gray-600">Notification Type</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    Promotional Offers
+                    {getNotificationTypeLabel(campaign.notification_type)}
                   </p>
                 </div>
 
@@ -97,13 +116,20 @@ export function CampaignPreviewPage() {
                   <p className="text-sm text-gray-600">Status</p>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      campaign.status === 'sent'
+                      campaign.status === 'SENT'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}
                   >
                     {campaign.status}
                   </span>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600">Created At</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {new Date(campaign.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 

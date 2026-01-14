@@ -17,7 +17,7 @@ export type Campaign = {
 
 export function CampaignManagementPage() {
   const navigate = useNavigate();
-  const { user, isViewer } = useAuth();
+  const { user, isViewer, getAuthHeaders } = useAuth();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,11 +33,13 @@ export function CampaignManagementPage() {
     fetchCampaigns();
   }, []);
 
-
   const fetchCampaigns = async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/campaigns`
+        `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
+        {
+          headers: getAuthHeaders()
+        }
       );
 
       if (!res.ok) {
@@ -61,7 +63,7 @@ export function CampaignManagementPage() {
         `${import.meta.env.VITE_API_BASE_URL}/campaigns`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             campaign_name: formData.name,
             city_filter: formData.city_filter || null,
@@ -70,7 +72,6 @@ export function CampaignManagementPage() {
           }),
         }
       );
-
 
       if (!response.ok) {
         throw new Error('Failed to create campaign');
@@ -90,7 +91,6 @@ export function CampaignManagementPage() {
       alert('Failed to create campaign');
     }
   };
-
 
   const getNotificationTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -143,10 +143,11 @@ export function CampaignManagementPage() {
                         {campaign.campaign_name}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${campaign.status === 'SENT'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                          }`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          campaign.status === 'SENT'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
                       >
                         {campaign.status.charAt(0).toUpperCase() +
                           campaign.status.slice(1)}
@@ -327,4 +328,3 @@ export function CampaignManagementPage() {
     </Layout>
   );
 }
-

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import bcrypt from 'bcryptjs';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -31,15 +30,25 @@ export function LoginPage() {
       );
 
       if (!response.ok) {
-        throw new Error('Invalid email or password');
+        const errorData = await response.json().catch(() => ({ detail: 'Invalid email or password' }));
+        throw new Error(errorData.detail || 'Invalid email or password');
       }
 
       const data = await response.json();
+      // Backend now returns: { user_id, email, name, role_id, session_token }
 
-      //Store user in AuthContext
-      login(data);
+      // Extract user data (without session_token)
+      const user = {
+        user_id: data.user_id,
+        email: data.email,
+        name: data.name,
+        role_id: data.role_id
+      };
 
-      //Role-based redirect
+      // Store user and session_token in AuthContext
+      login(user, data.session_token);
+
+      // Role-based redirect
       if (data.role_id === 1) {
         navigate('/dashboard');
       } else if (data.role_id === 2 || data.role_id === 3) {
@@ -115,6 +124,18 @@ export function LoginPage() {
               <span>{loading ? 'Logging in...' : 'Login'}</span>
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <button
+                onClick={() => navigate('/signup')}
+                className="text-[#FF1774] hover:underline font-medium"
+              >
+                Sign up
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

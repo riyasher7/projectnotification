@@ -16,7 +16,7 @@ export type Newsletter = {
 
 export function NewsletterManagementPage() {
   const navigate = useNavigate();
-  const { user, isViewer } = useAuth();
+  const { user, isViewer, getAuthHeaders } = useAuth();
 
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,13 +34,18 @@ export function NewsletterManagementPage() {
 
   const fetchNewsletters = async () => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/newsletters`
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/newsletters`,
+        {
+          headers: getAuthHeaders(),
+        }
       );
 
-      if (!res.ok) throw new Error('Failed to fetch newsletters');
+      if (!response.ok) {
+        throw new Error('Failed to fetch newsletters');
+      }
 
-      const data: Newsletter[] = await res.json();
+      const data: Newsletter[] = await response.json();
       setNewsletters(data);
     } catch (err) {
       console.error(err);
@@ -62,7 +67,7 @@ export function NewsletterManagementPage() {
         `${import.meta.env.VITE_API_BASE_URL}/newsletters`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             news_name: formData.name,
             city_filter: formData.city_filter || null,
@@ -72,7 +77,9 @@ export function NewsletterManagementPage() {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to create newsletter');
+      if (!response.ok) {
+        throw new Error('Failed to create newsletter');
+      }
 
       setShowModal(false);
       setFormData({ name: '', city_filter: '', content: '' });
@@ -100,9 +107,7 @@ export function NewsletterManagementPage() {
           {!isViewer && (
             <button
               onClick={() => setShowModal(true)}
-              className="bg-pink-600 hover:bg-pink-700 text-white
-                         px-5 py-2.5 rounded-lg
-                         flex items-center space-x-2 transition"
+              className="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2.5 rounded-lg flex items-center space-x-2 transition-colors"
             >
               <Plus size={18} />
               <span>New Newsletter</span>
@@ -112,35 +117,44 @@ export function NewsletterManagementPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="text-center py-12">Loading...</div>
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
+            <p className="mt-4 text-gray-600">Loading newsletters...</p>
+          </div>
         ) : (
           <div className="space-y-8">
             {newsletters.map(newsletter => (
               <div
                 key={newsletter.newsletter_id}
-                className="bg-white rounded-xl shadow-lg p-8"
+                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow"
               >
                 <div className="flex justify-between items-start">
                   {/* Left */}
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-4">
                       <h3 className="text-xl font-bold text-pink-600">
                         {newsletter.news_name}
                       </h3>
 
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium
-                          ${
-                            newsletter.status === 'DRAFT'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          newsletter.status === 'DRAFT'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
                       >
                         {newsletter.status}
                       </span>
                     </div>
 
                     <div className="space-y-2 text-gray-700 text-sm">
+                      {newsletter.city_filter && (
+                        <p>
+                          <span className="font-semibold">City Filter:</span>{' '}
+                          {newsletter.city_filter}
+                        </p>
+                      )}
+
                       <p>
                         <span className="font-semibold">Content:</span>{' '}
                         {newsletter.content}
@@ -148,31 +162,27 @@ export function NewsletterManagementPage() {
 
                       <p>
                         <span className="font-semibold">Created:</span>{' '}
-                        {new Date(
-                          newsletter.created_at
-                        ).toLocaleDateString()}
+                        {new Date(newsletter.created_at).toLocaleDateString()}
                       </p>
 
-                      <p>
-                        <span className="font-semibold">Sent:</span>{' '}
-                        {new Date(
-                          newsletter.created_at
-                        ).toLocaleDateString()}
-                      </p>
+                      {newsletter.status === 'SENT' && (
+                        <p>
+                          <span className="font-semibold">Sent:</span>{' '}
+                          {new Date(newsletter.created_at).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   {/* Right */}
-                  <div className="flex space-x-3">
+                  <div className="flex space-x-3 ml-4">
                     <button
                       onClick={() =>
                         navigate(
                           `/newsletters/${newsletter.newsletter_id}/preview`
                         )
                       }
-                      className="flex items-center space-x-2
-                                 bg-blue-500 hover:bg-blue-600
-                                 text-white px-5 py-2.5 rounded-lg transition"
+                      className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg transition-colors"
                     >
                       <Eye size={18} />
                       <span>Preview</span>
@@ -185,9 +195,7 @@ export function NewsletterManagementPage() {
                             `/newsletters/${newsletter.newsletter_id}/send`
                           )
                         }
-                        className="flex items-center space-x-2
-                                   bg-green-500 hover:bg-green-600
-                                   text-white px-5 py-2.5 rounded-lg transition"
+                        className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg transition-colors"
                       >
                         <Send size={18} />
                         <span>Send</span>
@@ -200,66 +208,86 @@ export function NewsletterManagementPage() {
 
             {newsletters.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl shadow-lg">
-                No newsletters yet.
+                <p className="text-gray-600">
+                  No newsletters yet. Create your first newsletter!
+                </p>
               </div>
             )}
           </div>
         )}
 
-        {/* Create Modal (unchanged except spacing consistency) */}
+        {/* Create Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6">
-              <h2 className="text-2xl font-bold mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Create New Newsletter
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                  placeholder="Newsletter Name"
-                  value={formData.name}
-                  onChange={e =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Newsletter Name
+                  </label>
+                  <input
+                    placeholder="Enter newsletter name"
+                    value={formData.name}
+                    onChange={e =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    required
+                  />
+                </div>
 
-                <input
-                  placeholder="City Filter (optional)"
-                  value={formData.city_filter}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      city_filter: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City Filter (Optional)
+                  </label>
+                  <input
+                    placeholder="Enter city name"
+                    value={formData.city_filter}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        city_filter: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  />
+                </div>
 
-                <textarea
-                  placeholder="Newsletter Content"
-                  value={formData.content}
-                  onChange={e =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Newsletter Content
+                  </label>
+                  <textarea
+                    placeholder="Enter newsletter content"
+                    value={formData.content}
+                    onChange={e =>
+                      setFormData({ ...formData, content: e.target.value })
+                    }
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    required
+                  />
+                </div>
 
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 border rounded-lg py-2"
+                    onClick={() => {
+                      setShowModal(false);
+                      setFormData({ name: '', city_filter: '', content: '' });
+                    }}
+                    className="flex-1 border border-gray-300 rounded-lg py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="flex-1 bg-pink-600 text-white rounded-lg py-2"
+                    className="flex-1 bg-pink-600 hover:bg-pink-700 text-white rounded-lg py-2 transition-colors"
                   >
                     Save as Draft
                   </button>

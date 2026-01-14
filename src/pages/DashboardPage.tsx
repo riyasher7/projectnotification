@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Users, UserCheck, Mail, Send } from 'lucide-react';
 import { Layout } from '../components/Layout';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Stats = {
   totalUsers: number;
@@ -15,6 +15,7 @@ type Stats = {
 };
 
 export function DashboardPage() {
+  const { getAuthHeaders } = useAuth();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -33,24 +34,42 @@ export function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const [usersRes, campaignsRes, newslettersRes] = await Promise.all([
-        supabase.from('users').select('is_active', { count: 'exact' }).eq('role_id', 4),
-        supabase.from('campaigns').select('status', { count: 'exact' }),
-        supabase.from('newsletters').select('status', { count: 'exact' }),
-      ]);
+      const headers = getAuthHeaders();
 
-      const totalUsers = usersRes.count || 0;
-      const activeUsers =
-        usersRes.data?.filter(u => u.is_active).length || 0;
+      // Fetch users (admin endpoint)
+      const usersRes = await fetch('http://localhost:9100/admin/users', {
+        headers
+      });
 
-      const totalCampaigns = campaignsRes.count || 0;
-      const sentCampaigns =
-        campaignsRes.data?.filter(c => c.status === 'SENT').length || 0;
-      const draftCampaigns =
-        campaignsRes.data?.filter(c => c.status === 'DRAFT').length || 0;
-      const totalNewsletters = newslettersRes.count || 0;
-      const sentNewsletters = newslettersRes.data?.filter(n => n.status === 'SENT').length || 0;
-      const draftNewsletters = newslettersRes.data?.filter(n => n.status === 'DRAFT').length || 0;
+      // Fetch campaigns
+      const campaignsRes = await fetch('http://localhost:9100/campaigns', {
+        headers
+      });
+
+      // Fetch newsletters
+      const newslettersRes = await fetch('http://localhost:9100/newsletters', {
+        headers
+      });
+
+      if (!usersRes.ok || !campaignsRes.ok || !newslettersRes.ok) {
+        throw new Error('Failed to fetch stats');
+      }
+
+      const users = await usersRes.json();
+      const campaigns = await campaignsRes.json();
+      const newsletters = await newslettersRes.json();
+
+      const totalUsers = users.length;
+      const activeUsers = users.filter((u: any) => u.is_active).length;
+
+      const totalCampaigns = campaigns.length;
+      const sentCampaigns = campaigns.filter((c: any) => c.status === 'SENT').length;
+      const draftCampaigns = campaigns.filter((c: any) => c.status === 'DRAFT').length;
+
+      const totalNewsletters = newsletters.length;
+      const sentNewsletters = newsletters.filter((n: any) => n.status === 'SENT').length;
+      const draftNewsletters = newsletters.filter((n: any) => n.status === 'DRAFT').length;
+
       setStats({
         totalUsers,
         activeUsers,

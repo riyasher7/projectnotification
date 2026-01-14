@@ -1,15 +1,35 @@
 import { LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, isAdmin, isCreator, isViewer } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (isAdmin || isCreator || isViewer) {
+        navigate('/dashboard');
+      } else {
+        navigate('/user-portal');
+      }
+    }
+  }, [isAuthenticated, isAdmin, isCreator, isViewer, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-12">
-          <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-48 h-auto mb-6 mx-auto" />
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Nykaa</h1>
+          <img
+            src="/nykaa-logo.png"
+            alt="Nykaa logo"
+            className="w-48 h-auto mb-6 mx-auto"
+          />
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome to Nykaa
+          </h1>
           <p className="text-lg text-gray-600">Campaign Management Portal</p>
         </div>
 
@@ -39,6 +59,11 @@ export function LandingPage() {
             <span className="text-lg font-semibold">Sign Up</span>
           </button>
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Manage your notification campaigns and reach your customers
+          effectively
+        </p>
       </div>
     </div>
   );
