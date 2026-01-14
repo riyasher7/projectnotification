@@ -14,6 +14,13 @@ export type Newsletter = {
   created_by: string;
 };
 
+type NotificationMessage = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+};
+
 export function NewsletterSendPage() {
   const { id: newsletterId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -24,6 +31,88 @@ export function NewsletterSendPage() {
   const [sending, setSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
+
+  const showNotification = (title: string, content: string) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const n: NotificationMessage = { id, title, content, createdAt: Date.now() };
+    setNotifications(prev => [n, ...prev].slice(0, 6));
+    setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== id)), 10000);
+  };
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimer: any = null;
+    let heartbeatInterval: any = null;
+    let mounted = true;
+
+    const wsBase =
+      import.meta.env.VITE_WS_BASE_URL ||
+      (import.meta.env.VITE_API_BASE_URL
+        ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')
+        : 'ws://localhost:9100');
+
+    const wsUrl = `${wsBase.replace(/\/$/, '')}/ws/notifications/${userId}`;
+
+    const connect = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('WS connected', wsUrl);
+        setWsConnected(true);
+        heartbeatInterval = setInterval(() => {
+          if (ws && ws.readyState === 1) {
+            try { ws.send(JSON.stringify({ type: 'PING' })); } catch { /* ignore */ }
+          }
+        }, 30000);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WS message', data);
+          if (data.type === 'NEWSLETTER' || data.type === 'CAMPAIGN') {
+            showNotification(`📢 ${data.title}`, data.content || newsletter?.content || '');
+          }
+        } catch (err) {
+          console.error('WS message parse error', err);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WS closed, reconnecting...', wsUrl);
+        setWsConnected(false);
+        if (mounted) reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WS error', err);
+        setWsConnected(false);
+        try { ws?.close(); } catch { /* ignore */ }
+      };
+    };
+
+    connect();
+
+    return () => {
+      mounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      try { ws?.close(); } catch { /* ignore */ }
+    };
+  }, [userId, newsletter]);
 
   useEffect(() => {
     if (!newsletterId) return;

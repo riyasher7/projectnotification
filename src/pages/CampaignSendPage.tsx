@@ -14,8 +14,79 @@ export function CampaignSendPage() {
   const [sending, setSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimer: any = null;
+    let heartbeatInterval: any = null;
+    let mounted = true;
+
+    // configure WS base from env
+    const wsBase =
+      import.meta.env.VITE_WS_BASE_URL ||
+      (import.meta.env.VITE_API_BASE_URL
+        ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')
+        : 'ws://localhost:9100');
+
+    const wsUrl = `${wsBase.replace(/\/$/, '')}/ws/notifications/${userId}`;
+
+    const connect = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('WS connected', wsUrl);
+        // start heartbeat
+        heartbeatInterval = setInterval(() => {
+          if (ws && ws.readyState === 1) {
+            try { ws.send(JSON.stringify({ type: 'PING' })); } catch { /* ignore */ }
+          }
+        }, 30000);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'CAMPAIGN') {
+            // show campaign notification (title + content)
+            alert(`📢 ${data.title}\n\n${data.content || campaign?.content || ''}`);
+          }
+        } catch (err) {
+          console.error('WS message parse error', err);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WS closed, reconnecting in 2s...');
+        if (mounted) reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WS error', err);
+        // close to trigger reconnect/backoff flow
+        try { ws?.close(); } catch { /* ignore */ }
+      };
+    };
+
+    connect();
+
+    return () => {
+      mounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      try { ws?.close(); } catch { /* ignore */ }
+    };
+  }, [userId, campaign]);
   useEffect(() => {
     if (!campaignId) return;
     fetchCampaignAndCount();

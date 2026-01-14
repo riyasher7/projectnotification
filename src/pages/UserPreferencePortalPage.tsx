@@ -43,10 +43,19 @@ type Order = {
   status: OrderStatus;
 };
 
+type NotificationMessage = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+};
+
 export function UserPreferenceSettingsPage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderName, setOrderName] = useState('');
   const [preferences, setPreferences] = useState<UserPreference | null>(null);
@@ -56,9 +65,77 @@ export function UserPreferenceSettingsPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const showNotification = (title: string, content: string) => {
+    console.log('showNotification', { title, content });
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const n: NotificationMessage = { id, title, content, createdAt: Date.now() };
+    setNotifications(prev => [n, ...prev].slice(0, 6)); // limit stack
+    // auto-dismiss
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(x => x.id !== id));
+    }, 10000);
+  };
+
   useEffect(() => {
     if (!userId) return;
     fetchData();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimer: any = null;
+    let mounted = true;
+
+    const wsBase =
+      import.meta.env.VITE_WS_BASE_URL ||
+      (import.meta.env.VITE_API_BASE_URL
+        ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')
+        : 'ws://localhost:9100');
+
+    const wsUrl = `${wsBase.replace(/\/$/, '')}/ws/notifications/${userId}`;
+
+    const connect = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('WS connected', wsUrl);
+        setWsConnected(true);
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          console.log('WS message', data);
+          if (data.type === 'CAMPAIGN' || data.type === 'NEWSLETTER') {
+            showNotification(`📢 ${data.title}`, data.content);
+          }
+        } catch (err) {
+          console.error('WS message parse error', err);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WS closed', wsUrl);
+        setWsConnected(false);
+        if (mounted) reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WS error', err);
+        setWsConnected(false);
+        try { ws?.close(); } catch { /* ignore */ }
+      };
+    };
+
+    connect();
+
+    return () => {
+      mounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      try { ws?.close(); } catch { /* ignore */ }
+    };
   }, [userId]);
 
   const fetchData = async () => {
@@ -224,6 +301,40 @@ export function UserPreferenceSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white p-4">
+      {/* Notification toasts + WS status (top-right) */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col items-end space-y-3">
+        <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow">
+          <div className={`h-2 w-2 rounded-full ${wsConnected ? 'bg-green-400' : 'bg-gray-300'}`} />
+          <div className="text-sm text-gray-600">{wsConnected ? 'Connected' : 'Disconnected'}</div>
+          <button
+            onClick={() => showNotification('Test notification', 'This is a local test')}
+            className="ml-3 text-xs underline text-pink-600"
+          >
+            Test
+          </button>
+        </div>
+
+        {notifications.map(n => (
+          <div
+            key={n.id}
+            role="status"
+            className="bg-white shadow-lg rounded-lg p-4 w-80 max-w-xs flex items-start gap-3 border"
+          >
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-pink-600">{n.title}</div>
+              <div className="text-xs text-gray-600 mt-1">{n.content}</div>
+            </div>
+            <button
+              onClick={() => setNotifications(prev => prev.filter(x => x.id !== n.id))}
+              className="text-gray-400 hover:text-gray-600 ml-2"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
       <div className="max-w-5xl mx-auto py-8 space-y-10">
         <button
           onClick={() => navigate('/login')}
