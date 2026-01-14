@@ -21,54 +21,26 @@ export function SignupPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       // 1️⃣ Insert user
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .insert([
-          {
-            name: name,
-            email,
-            password: password, // ⚠️ hash later in backend
-            phone: phoneNumber,
-            city,
-            gender,
-            is_active: true,
-            role_id: 4,
+      const response = await fetch(
+        'http://localhost:9100/auth/user/signup',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ])
-        .select()
-        .single();
+          body: JSON.stringify({
+            name, email, password, gender, city, phone: phoneNumber
+          })
+        }
+      );
 
-      if (userError) throw userError;
+      if (!response.ok) {
+        throw new Error('Signup failed');
+      }
 
-      // 2️⃣ Create default preferences
-      const { error: prefError } = await supabase
-        .from('user_preferences')
-        .insert([
-          {
-            user_id: user.user_id,
-            offers: true,
-            order_updates: true,
-            newsletter: true,
-            city: city
-          },
-        ]);
-
-      const { error: notifError } = await supabase
-        .from('notification_type')
-        .insert([
-          {
-            user_id: user.user_id,
-            email: true,
-            sms: true,
-            push: true
-          },
-        ]);
-
-      if (prefError) throw prefError;
-      if (notifError) throw notifError;
+      const user = await response.json();
 
       // 3️⃣ Redirect to user preference portal
       navigate(`/user/${user.user_id}/preferences`);

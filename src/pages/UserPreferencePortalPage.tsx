@@ -14,9 +14,15 @@ type UserPreference = {
   offers: boolean;
   order_updates: boolean;
   newsletter: boolean;
-  email_channel: boolean;
-  sms_channel: boolean;
-  push_channel: boolean;
+  campaign_email: boolean;
+  campaign_sms: boolean;
+  campaign_push: boolean;
+  newsletter_email: boolean;
+  newsletter_sms: boolean;
+  newsletter_push: boolean;
+  update_email: boolean;
+  update_sms: boolean;
+  update_push: boolean;
 };
 
 type Campaign = {
@@ -64,6 +70,7 @@ export function UserPreferenceSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const showNotification = (title: string, content: string) => {
     console.log('showNotification', { title, content });
@@ -219,9 +226,47 @@ export function UserPreferenceSettingsPage() {
     | 'order_updates'
     | 'newsletter'
 
+  type ChannelKey =
+    | 'campaign_email'
+    | 'campaign_sms'
+    | 'campaign_push'
+    | 'newsletter_email'
+    | 'newsletter_sms'
+    | 'newsletter_push'
+    | 'update_email'
+    | 'update_sms'
+    | 'update_push';
+
   const toggle = (key: PreferenceToggleKey) => {
     if (!preferences) return;
     setPreferences({ ...preferences, [key]: !preferences[key] });
+  };
+
+  const toggleChannel = async (key: ChannelKey) => {
+    if (!preferences || !userId) return;
+    const prev = preferences;
+    const updated = { ...prev, [key]: !prev[key] };
+
+    // optimistic update
+    setPreferences(updated);
+    setMessage('');
+
+    try {
+      const res = await fetch(
+        `http://localhost:9100/users/${userId}/preferences`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updated),
+        }
+      );
+      if (!res.ok) throw new Error();
+      setMessage('Preference updated');
+    } catch {
+      // revert on failure
+      setPreferences(prev);
+      setMessage('Failed to update preference');
+    }
   };
 
   const handleSave = async () => {
@@ -273,18 +318,22 @@ export function UserPreferenceSettingsPage() {
     active,
     icon: Icon,
     label,
+    onClick,
   }: {
     active: boolean;
     icon: any;
     label: string;
+    onClick?: () => void;
   }) => (
-    <div
-      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 ${active ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-400'
         }`}
     >
       <Icon size={14} />
       {label}
-    </div>
+    </button>
   );
 
   if (loading) {
@@ -336,13 +385,30 @@ export function UserPreferenceSettingsPage() {
       </div>
 
       <div className="max-w-5xl mx-auto py-8 space-y-10">
-        <button
-          onClick={() => navigate('/login')}
-          className="flex items-center text-pink-600"
-        >
-          <ArrowLeft size={18} />
-          <span className="ml-2">Back</span>
-        </button>
+        <header className="flex justify-between items-center">
+          <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto" />
+
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(s => !s)}
+              className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow"
+            >
+              <div className="font-medium text-gray-700">{preferences.user_id || `User ${userId}`}</div>
+              <div className="text-gray-500">▾</div>
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 bg-white rounded shadow p-2 w-36">
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate('/login'); }}
+                  className="w-full text-left px-2 py-1 text-sm text-pink-600 hover:bg-pink-50 rounded"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
 
         {/* ================= CAMPAIGNS ================= */}
         {preferences.offers && (
@@ -353,9 +419,9 @@ export function UserPreferenceSettingsPage() {
               </h2>
 
               <div className="flex gap-2">
-                <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
-                <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
-                <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+                <ChannelBadge active={preferences.campaign_email} icon={Mail} label="Email" onClick={() => toggleChannel('campaign_email')} />
+                <ChannelBadge active={preferences.campaign_sms} icon={MessageSquare} label="SMS" onClick={() => toggleChannel('campaign_sms')} />
+                <ChannelBadge active={preferences.campaign_push} icon={Bell} label="Push" onClick={() => toggleChannel('campaign_push')} />
               </div>
             </div>
 
@@ -390,9 +456,9 @@ export function UserPreferenceSettingsPage() {
               </h2>
 
               <div className="flex gap-2">
-                <ChannelBadge active={preferences.email_channel} icon={Mail} label="Email" />
-                <ChannelBadge active={preferences.sms_channel} icon={MessageSquare} label="SMS" />
-                <ChannelBadge active={preferences.push_channel} icon={Bell} label="Push" />
+                <ChannelBadge active={preferences.newsletter_email} icon={Mail} label="Email" onClick={() => toggleChannel('newsletter_email')} />
+                <ChannelBadge active={preferences.newsletter_sms} icon={MessageSquare} label="SMS" onClick={() => toggleChannel('newsletter_sms')} />
+                <ChannelBadge active={preferences.newsletter_push} icon={Bell} label="Push" onClick={() => toggleChannel('newsletter_push')} />
               </div>
             </div>
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import bcrypt from 'bcryptjs';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -17,7 +18,6 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const response = await fetch(
         'http://127.0.0.1:9100/auth/user/login',
