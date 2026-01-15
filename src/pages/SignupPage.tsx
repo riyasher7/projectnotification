@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getEmailError, getPasswordError } from '../utils/validation';
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -15,12 +16,56 @@ export function SignupPage() {
     'male' | 'female' | 'prefer_not_to_say'
   >('prefer_not_to_say');
   const [name, setName] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (emailError) {
+      setEmailError('');
+    }
+  };
+
+  const handleEmailBlur = () => {
+    const errorMsg = getEmailError(email);
+    if (errorMsg) {
+      setEmailError(errorMsg)
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    const error = getPasswordError(password);
+    if (error) {
+      setPasswordError(error);
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    if (passwordError) {
+      setPasswordError('');
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const emailErr = getEmailError(email);
+    const PasswordErr = getPasswordError(password);
+    if (emailErr) {
+      setEmailError(emailErr);
+      return;
+    }
+    if (PasswordErr) {
+      setPasswordError(PasswordErr);
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch(
@@ -108,24 +153,37 @@ export function SignupPage() {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                className={`w-full px-4 py-3 border rounded-lg ${emailError ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
+              {emailError && (
+                <p className="mt-1 text-sm text-red-600">{emailError}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
-                required
-                pattern="[0-9]{10}"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
-              />
+
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  +91
+                </span>
+
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={e => setPhoneNumber(e.target.value)}
+                  required
+                  pattern="[0-9]{10}"
+                  maxLength={10}
+                  className="w-full pl-12 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                  placeholder="9876543210"
+                />
+              </div>
             </div>
 
             <div>

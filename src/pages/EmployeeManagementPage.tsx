@@ -5,7 +5,7 @@ import { Layout } from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Employee {
-  user_id: number;
+  user_id: string;  // ✅ Changed from number to string
   name: string;
   email: string;
   role_id: number;
@@ -19,12 +19,13 @@ const roleMap: Record<number, string> = {
 
 export function EmployeeManagementPage() {
   const navigate = useNavigate();
-  const { getAuthHeaders } = useAuth();
+  const { getAuthHeaders, user } = useAuth();  // ✅ Get current user
   
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);  // ✅ Track which employee is being deleted
 
   const [formData, setFormData] = useState({
     name: '',
@@ -37,7 +38,6 @@ export function EmployeeManagementPage() {
     fetchEmployees();
   }, []);
 
-  // 🔐 Fetch employees
   const fetchEmployees = async () => {
     setLoading(true);
     try {
@@ -73,9 +73,7 @@ export function EmployeeManagementPage() {
     }
   };
 
-  // ➕ Create employee
   const createEmployee = async () => {
-    // Validation
     if (!formData.name || !formData.email || !formData.password) {
       alert('Please fill in all required fields');
       return;
@@ -101,6 +99,7 @@ export function EmployeeManagementPage() {
       setShowModal(false);
       setFormData({ name: '', email: '', password: '', role_id: 1 });
       fetchEmployees();
+      alert('Employee created successfully');
     } catch (err: any) {
       console.error('Failed to create employee', err);
       alert(err.message || 'Failed to create employee');
@@ -109,9 +108,16 @@ export function EmployeeManagementPage() {
     }
   };
 
-  // 🗑 Delete employee
-  const deleteEmployee = async (employeeId: number) => {
+  const deleteEmployee = async (employeeId: string) => {  // ✅ Changed to string
+    // ✅ Prevent deleting yourself
+    if (employeeId === user?.user_id) {
+      alert('You cannot delete yourself!');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this employee?')) return;
+
+    setDeleting(employeeId);  // ✅ Show loading state
 
     try {
       const response = await fetch(
@@ -127,10 +133,16 @@ export function EmployeeManagementPage() {
         throw new Error(error.detail || 'Failed to delete employee');
       }
 
-      fetchEmployees();
+      // ✅ Remove from UI immediately (optimistic update)
+      setEmployees(prev => prev.filter(emp => emp.user_id !== employeeId));
+      alert('Employee deleted successfully');
     } catch (err: any) {
       console.error('Failed to delete employee', err);
       alert(err.message || 'Failed to delete employee');
+      // ✅ Refresh on error to ensure UI is in sync
+      fetchEmployees();
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -197,8 +209,8 @@ export function EmployeeManagementPage() {
                       key={emp.user_id}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {emp.user_id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                        {emp.user_id.substring(0, 8)}...
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
@@ -224,10 +236,15 @@ export function EmployeeManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           onClick={() => deleteEmployee(emp.user_id)}
-                          className="text-red-600 hover:text-red-800 transition-colors"
-                          title="Delete employee"
+                          disabled={deleting === emp.user_id || emp.user_id === user?.user_id}
+                          className="text-red-600 hover:text-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={emp.user_id === user?.user_id ? "Cannot delete yourself" : "Delete employee"}
                         >
-                          <Trash2 size={18} />
+                          {deleting === emp.user_id ? (
+                            <span className="inline-block animate-spin">⏳</span>
+                          ) : (
+                            <Trash2 size={18} />
+                          )}
                         </button>
                       </td>
                     </tr>
@@ -238,7 +255,7 @@ export function EmployeeManagementPage() {
           </div>
         )}
 
-        {/* Create Modal */}
+        {/* Create Modal - same as before */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
             <div className="bg-white p-6 rounded-xl w-full max-w-md space-y-4">
