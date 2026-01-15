@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getEmailError } from '../utils/validation';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -10,12 +11,36 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const [emailError, setEmailError] = useState<string | null>(null);
   const { login } = useAuth();
+
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    if(emailError){
+      setEmailError('');
+    }
+  };
+
+  const handleEmailBlur = () => {
+    const errorMsg = getEmailError(email);
+    if(error){
+      setEmailError(error)    
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const emailValidationError = getEmailError(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -25,7 +50,7 @@ export function LoginPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
         }
       );
 
@@ -90,10 +115,16 @@ export function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                onBlur= {handleEmailBlur}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 ${
+                  emailError ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {emailError && (
+                <p className="text-red-600 text-sm mt-1">{emailError}</p>
+              )}
             </div>
 
             <div>
@@ -117,7 +148,7 @@ export function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!emailError}
               className="w-full bg-gradient-to-r from-[#FF1774] to-[#FF1774] text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               <LogIn size={20} />
