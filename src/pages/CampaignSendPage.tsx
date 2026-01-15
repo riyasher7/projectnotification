@@ -28,6 +28,8 @@ export function CampaignSendPage() {
   const [sentCount, setSentCount] = useState(0);
   const [successCount, setSuccessCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
+  const [scheduleMinutes, setScheduleMinutes] = useState<number>(0);
+
 
   // WebSocket connection for real-time notifications
   useEffect(() => {
@@ -245,6 +247,24 @@ export function CampaignSendPage() {
                   <p className="text-sm text-gray-600">Message Content</p>
                   <p className="text-gray-800 mt-2">{campaign.content}</p>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Schedule Notification (Optional)
+                  </label>
+                  <select
+                    value={scheduleMinutes}
+                    onChange={e => setScheduleMinutes(Number(e.target.value))}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  >
+                    <option value={0}>Send Now</option>
+                    <option value={5}>After 5 minutes</option>
+                    <option value={10}>After 10 minutes</option>
+                    <option value={20}>After 20 minutes</option>
+                    <option value={30}>After 30 minutes</option>
+                  </select>
+              
+                </div>
+
               </div>
 
               {userCount === 0 && (
@@ -294,12 +314,7 @@ export function CampaignSendPage() {
                 Total Recipients:{' '}
                 <span className="font-semibold text-gray-800">{sentCount}</span>
               </p>
-              <p className="text-gray-600">
-                Successfully Sent:{' '}
-                <span className="font-semibold text-green-600">
-                  {successCount}
-                </span>
-              </p>
+
               {failedCount > 0 && (
                 <p className="text-gray-600">
                   Failed:{' '}

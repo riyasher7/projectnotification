@@ -362,12 +362,6 @@ export function NewsletterSendPage() {
                 Total Recipients:{' '}
                 <span className="font-semibold text-gray-800">{sentCount}</span>
               </p>
-              <p className="text-gray-600">
-                Successfully Sent:{' '}
-                <span className="font-semibold text-green-600">
-                  {successCount}
-                </span>
-              </p>
               {failedCount > 0 && (
                 <p className="text-gray-600">
                   Failed:{' '}

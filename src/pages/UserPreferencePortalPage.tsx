@@ -64,6 +64,8 @@ export function UserPreferenceSettingsPage() {
   
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
+  const [pendingNotifications, setPendingNotifications] = useState<NotificationMessage[]>([]);
+  const [showPendingMenu, setShowPendingMenu] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderName, setOrderName] = useState('');
@@ -147,6 +149,27 @@ export function UserPreferenceSettingsPage() {
     };
   }, [userId]);
 
+  const fetchPendingNotifications = async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(
+        `http://localhost:9100/users/${userId}/notifications`,
+        { headers: getAuthHeaders() }
+      );
+      if (!res.ok) throw new Error('Failed to fetch pending notifications');
+      const data = await res.json();
+      const mapped: NotificationMessage[] = (data || []).map((r: any) => ({
+        id: r.id || r.log_id,
+        title: r.title || 'Notification',
+        content: r.content || '',
+        createdAt: r.sent_at ? Date.parse(r.sent_at) || Date.now() : Date.now(),
+      }));
+      setPendingNotifications(mapped);
+    } catch (err) {
+      console.error('Failed to fetch pending notifications', err);
+    }
+  };
+
   const fetchData = async () => {
     try {
       // ✅ Add authentication headers to all requests
@@ -195,6 +218,8 @@ export function UserPreferenceSettingsPage() {
           )
         );
       }
+      // fetch pending server-side notifications that were stored while user was logged out
+      await fetchPendingNotifications();
     } catch (err) {
       console.error(err);
       setMessage('Failed to load data');
@@ -235,7 +260,7 @@ export function UserPreferenceSettingsPage() {
     | 'order_updates'
     | 'newsletter'
 
-  type ChannelKey =
+  type ChannelKey = 
     | 'campaign_email'
     | 'campaign_sms'
     | 'campaign_push'
@@ -404,28 +429,61 @@ export function UserPreferenceSettingsPage() {
         <header className="flex justify-between items-center">
           <img src="/nykaa-logo.png" alt="Nykaa logo" className="w-40 h-auto" />
 
-          <div className="relative">
-            <button
-              onClick={() => setShowUserMenu(s => !s)}
-              className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow"
-            >
-              <div className="font-medium text-gray-700">{user?.name || `User ${userId}`}</div>
-              <div className="text-gray-500">▾</div>
-            </button>
+          <div className="flex items-center gap-3">
+            {/* Bell for pending notifications */}
+            <div className="relative">
+              <button
+                onClick={() => setShowPendingMenu(s => !s)}
+                className="p-2 bg-white rounded-full shadow"
+                aria-label="Pending notifications"
+              >
+                <Bell size={18} />
+                {pendingNotifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs rounded-full px-1">
+                    {pendingNotifications.length}
+                  </span>
+                )}
+              </button>
 
-            {showUserMenu && (
-              <div className="absolute right-0 mt-2 bg-white rounded shadow p-2 w-36">
-                <button
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-left px-2 py-1 text-sm text-pink-600 hover:bg-pink-50 rounded"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
+              {showPendingMenu && (
+                <div className="absolute right-0 mt-2 bg-white rounded shadow p-3 w-80 max-w-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold">Notifications</div>
+                    <button
+                      onClick={() => fetchPendingNotifications()}
+                      className="text-xs text-pink-600"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(s => !s)}
+                className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow"
+              >
+                <div className="font-medium text-gray-700">{user?.name || `User ${userId}`}</div>
+                <div className="text-gray-500">▾</div>
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 bg-white rounded shadow p-2 w-36">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-2 py-1 text-sm text-pink-600 hover:bg-pink-50 rounded"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
